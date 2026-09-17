@@ -1,14 +1,7 @@
-.header-actions{
-  position:relative;
-  display:flex;
-  align-items:center;
-  justify-content:flex-end;
-}
-
 .support-utility{
   position:absolute;
-  top:calc(100% + .9rem);
-  right:0;
+  top:calc(100% + .55rem);
+  right:var(--gutter);
   display:inline-flex;
   align-items:center;
   gap:.5rem;
@@ -155,7 +148,7 @@
 
 @media(max-width:640px){
   .support-utility{
-    top:calc(100% + .75rem);
+    top:calc(100% + .45rem);
     min-height:30px;
     padding:.46rem .64rem;
     font-size:.56rem;
