@@ -219,6 +219,42 @@ a:hover{color:var(--blue)}
 }
 .quote-axis:before{content:'FIG. / AXIS';position:absolute;top:-.85rem;left:0;background:var(--paper);padding-right:.5rem;font:500 .58rem/1 var(--mono);letter-spacing:.08em;color:var(--muted)}
 
+.source-note{
+  max-width:var(--article);
+  margin:0 0 4.75rem;
+  padding:1.15rem 1.25rem 1.25rem;
+  border:1px solid var(--line-strong);
+  background:rgba(255,255,255,.42);
+}
+.source-note b{
+  display:block;
+  margin-bottom:.65rem;
+  font:500 .62rem/1 var(--mono);
+  letter-spacing:.1em;
+  color:var(--blue);
+}
+.source-note p{
+  margin:0;
+  font:400 .78rem/1.65 var(--mono);
+  color:#454a51;
+}
+.closing-question{
+  max-width:var(--article);
+  margin:3.5rem 0 0;
+  padding:2.25rem 0 .25rem;
+  border-top:1px solid var(--ink);
+  font:400 clamp(1.7rem,3.4vw,2.8rem)/1.2 var(--serif);
+  letter-spacing:-.025em;
+}
+.closing-question:before{
+  content:'PREGUNTA / ABIERTA';
+  display:block;
+  margin-bottom:1.25rem;
+  font:500 .58rem/1 var(--mono);
+  letter-spacing:.1em;
+  color:var(--blue);
+}
+
 .back-link{display:inline-flex;align-items:center;gap:.6rem;margin-top:1rem;font:500 .66rem/1 var(--mono);text-transform:uppercase;letter-spacing:.08em}
 .back-link:before{content:'←'}
 
@@ -242,6 +278,8 @@ a:hover{color:var(--blue)}
   .essay-hero{padding-top:4.5rem}.essay-hero h1{font-size:clamp(3rem,16vw,5rem)}
   .essay-layout{padding-top:2.5rem}.essay-section{padding-bottom:3.5rem}
   .essay-section p{font-size:1.04rem;line-height:1.72}
+  .source-note{margin-bottom:3.5rem}
+  .closing-question{font-size:clamp(1.55rem,8vw,2.1rem)}
   .site-footer{grid-template-columns:1fr}
 }
 
