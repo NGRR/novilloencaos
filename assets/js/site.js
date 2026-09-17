@@ -4,6 +4,15 @@
 
   if (header && nav && !header.querySelector('.support-utility')) {
     const homeHref = header.querySelector('.brand')?.getAttribute('href') || './';
+
+    if (!document.querySelector('link[data-support-styles]')) {
+      const supportStyles = document.createElement('link');
+      supportStyles.rel = 'stylesheet';
+      supportStyles.href = `${homeHref}assets/css/support.css`;
+      supportStyles.dataset.supportStyles = '';
+      document.head.append(supportStyles);
+    }
+
     const actions = document.createElement('div');
     actions.className = 'header-actions';
 
