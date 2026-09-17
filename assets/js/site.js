@@ -19,7 +19,15 @@
     const support = document.createElement('a');
     support.className = 'support-utility';
     support.href = `${homeHref}apoyar/`;
-    support.textContent = 'invita un tecito';
+    support.setAttribute('aria-label', 'invita un tecito');
+    support.innerHTML = `
+      <svg class="support-utility-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M5.5 8.5h10v4.25a4.75 4.75 0 0 1-4.75 4.75h-.5a4.75 4.75 0 0 1-4.75-4.75V8.5Z" stroke="currentColor" stroke-width="1.25"/>
+        <path d="M15.5 10h1.75a2.75 2.75 0 0 1 0 5.5H15" stroke="currentColor" stroke-width="1.25"/>
+        <path d="M8.5 6.25c0-1.15 1.25-1.55 1.25-2.75M12.25 6.25c0-1.15 1.25-1.55 1.25-2.75" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
+      </svg>
+      <span>invita un tecito</span>
+    `;
 
     nav.before(actions);
     actions.append(nav, support);
