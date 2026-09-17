@@ -1,4 +1,21 @@
 (() => {
+  const header = document.querySelector('.site-header');
+  const nav = header?.querySelector('.site-nav');
+
+  if (header && nav && !header.querySelector('.support-utility')) {
+    const homeHref = header.querySelector('.brand')?.getAttribute('href') || './';
+    const actions = document.createElement('div');
+    actions.className = 'header-actions';
+
+    const support = document.createElement('a');
+    support.className = 'support-utility';
+    support.href = `${homeHref}apoyar/`;
+    support.textContent = 'invita un tecito';
+
+    nav.before(actions);
+    actions.append(nav, support);
+  }
+
   const progress = document.querySelector('.reading-progress');
   const sections = [...document.querySelectorAll('.essay-section[id]')];
   const tocLinks = [...document.querySelectorAll('.toc a[href^="#"]')];
