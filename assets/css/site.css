@@ -64,6 +64,54 @@ a:hover{color:var(--blue)}
 .brand small{color:var(--muted);font-weight:400}
 .site-nav{display:flex;gap:1.4rem;font:500 .72rem/1 var(--mono);text-transform:uppercase;letter-spacing:.08em}
 
+/* Apoyo / componente común */
+.support-cta{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.5rem;
+  min-height:34px;
+  padding:.55rem .78rem;
+  background:var(--ink);
+  color:#fff;
+  font:500 .61rem/1 var(--mono);
+  letter-spacing:.015em;
+  text-transform:none;
+  white-space:nowrap;
+  text-decoration:none;
+  transition:background-color .16s ease,transform .16s ease;
+}
+.support-cta svg{
+  display:block;
+  width:15px;
+  height:15px;
+  flex:0 0 15px;
+}
+.support-cta:hover,
+.support-cta:focus-visible{
+  color:#fff;
+  background:#2a2d31;
+}
+.support-utility{
+  position:absolute;
+  z-index:2;
+  top:calc(100% + .55rem);
+  right:var(--gutter);
+  box-shadow:0 1px 0 rgba(0,0,0,.08);
+}
+.support-utility:hover,
+.support-utility:focus-visible{transform:translateY(1px)}
+.article-support{
+  margin:0 0 1rem;
+  padding:2rem 0 0;
+  border-top:1px solid var(--line);
+}
+.site-footer.has-support{
+  grid-template-columns:1fr auto auto;
+  align-items:center;
+}
+.footer-support{justify-self:center}
+
 .page-shell{max-width:var(--measure);margin:0 auto;padding:0 var(--gutter)}
 .hero{
   position:relative;
@@ -84,6 +132,33 @@ a:hover{color:var(--blue)}
   letter-spacing:.1em;
   color:var(--muted);
 }
+
+.hero-art{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:.65rem;
+  align-items:end;
+  max-width:44rem;
+  margin:0 0 2rem;
+}
+.hero-art img{
+  display:block;
+  width:100%;
+  height:auto;
+  filter:grayscale(1);
+  border:1px solid var(--line-strong);
+  background:#ddd;
+}
+.hero-art figcaption{
+  writing-mode:vertical-rl;
+  transform:rotate(180deg);
+  padding-bottom:.15rem;
+  font:500 .55rem/1 var(--mono);
+  letter-spacing:.12em;
+  text-transform:lowercase;
+  color:var(--muted);
+}
+
 .hero-copy h1{
   margin:0;
   max-width:13ch;
@@ -280,7 +355,12 @@ a:hover{color:var(--blue)}
   .essay-section p{font-size:1.04rem;line-height:1.72}
   .source-note{margin-bottom:3.5rem}
   .closing-question{font-size:clamp(1.55rem,8vw,2.1rem)}
-  .site-footer{grid-template-columns:1fr}
+  .support-utility{top:calc(100% + .45rem);min-height:30px;padding:.46rem .64rem;font-size:.56rem}
+  .support-cta svg{width:14px;height:14px;flex-basis:14px}
+  .hero-art{gap:.45rem;margin-bottom:1.5rem}
+  .hero-art figcaption{font-size:.5rem}
+  .site-footer,.site-footer.has-support{grid-template-columns:1fr}
+  .footer-support{justify-self:start}
 }
 
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
