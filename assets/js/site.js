@@ -8,13 +8,10 @@
     if (!document.querySelector('link[data-support-styles]')) {
       const supportStyles = document.createElement('link');
       supportStyles.rel = 'stylesheet';
-      supportStyles.href = `${homeHref}assets/css/support.css`;
+      supportStyles.href = `${homeHref}assets/css/support.css?v=20260917-3`;
       supportStyles.dataset.supportStyles = '';
       document.head.append(supportStyles);
     }
-
-    const actions = document.createElement('div');
-    actions.className = 'header-actions';
 
     const support = document.createElement('a');
     support.className = 'support-utility';
@@ -29,8 +26,7 @@
       <span>invita un tecito</span>
     `;
 
-    nav.before(actions);
-    actions.append(nav, support);
+    header.append(support);
   }
 
   const progress = document.querySelector('.reading-progress');
