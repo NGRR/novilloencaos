@@ -23,14 +23,14 @@ Ensayo sobre la distancia entre norma pública, fantasía, deseo y violencia a p
 ```
 
 **003 — Acarrearse a uno mismo**  
-Texto original del 26 de diciembre de 2018, revisado editorialmente en 2026. Ensayo sobre memoria, responsabilidad, vulnerabilidad, conflicto y transformación.
+Texto original del 26 de diciembre de 2018, revisado en 2026. Comentario filosófico sobre memoria, responsabilidad, vulnerabilidad, conflicto y transformación.
 
 ```text
 /ensayos/acarrearse-a-si-mismo/
 ```
 
 **004 — No convertirse en el mensaje**  
-Texto cerrado originalmente en 2018 y revisado editorialmente en 2026. Ensayo sobre solidaridad, apropiación, representación, camuflaje ideológico y responsabilidad.
+Texto cerrado originalmente en 2018 y revisado en 2026. Comentario crítico sobre solidaridad, apropiación, representación, camuflaje ideológico y responsabilidad.
 
 ```text
 /ensayos/no-convertirse-en-el-mensaje/
