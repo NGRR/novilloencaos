@@ -22,7 +22,7 @@ Ensayo sobre la distancia entre norma pública, fantasía, deseo y violencia a p
 /ensayos/intimidad-digital/
 ```
 
-**003 — Acarrearse a sí mismo**  
+**003 — Acarrearse a uno mismo**  
 Texto original del 26 de diciembre de 2018, revisado editorialmente en 2026. Ensayo sobre memoria, responsabilidad, vulnerabilidad, conflicto y transformación.
 
 ```text
