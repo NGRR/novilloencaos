@@ -294,6 +294,25 @@ a:hover{color:var(--blue)}
 }
 .quote-axis:before{content:'FIG. / AXIS';position:absolute;top:-.85rem;left:0;background:var(--paper);padding-right:.5rem;font:500 .58rem/1 var(--mono);letter-spacing:.08em;color:var(--muted)}
 
+/* Extracción editorial de citas */
+.quote-export-link{
+  position:absolute;
+  right:0;
+  bottom:-1.5rem;
+  display:inline-flex;
+  align-items:center;
+  gap:.35rem;
+  padding:.25rem 0;
+  color:var(--blue);
+  font:500 .56rem/1 var(--mono);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  text-decoration:none;
+}
+.quote-export-link:after{content:'↗';font-size:.68rem}
+.quote-export-link:hover,
+.quote-export-link:focus-visible{color:var(--ink)}
+
 .source-note{
   max-width:var(--article);
   margin:0 0 4.75rem;
@@ -345,7 +364,7 @@ a:hover{color:var(--blue)}
   :root{--gutter:1rem}
   .site-grid{background-size:48px 48px}
   .site-header{min-height:62px}.reading-progress{top:61px}
-  .site-nav{gap:.8rem;font-size:.61rem}.site-nav a:nth-child(2){display:none}
+  .site-nav{gap:.8rem;font-size:.61rem}.site-nav a[href*="github.com"]{display:none}
   .brand small{display:none}
   .hero{padding-top:6rem}.hero-copy h1{font-size:clamp(3.7rem,20vw,6rem)}
   .archive-head{grid-template-columns:1fr}.archive-head span:last-child{display:none}
