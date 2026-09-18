@@ -32,6 +32,15 @@ Ruta:
 /ensayos/intimidad-digital/
 ```
 
+**003 — Acarrearse a sí mismo**  
+Texto original del 26 de diciembre de 2018, revisado editorialmente en 2026. Ensayo sobre memoria, responsabilidad, vulnerabilidad, conflicto y transformación.
+
+Ruta:
+
+```text
+/ensayos/acarrearse-a-si-mismo/
+```
+
 La ruta histórica `/ensayos/pero-aun-asi/` se conserva únicamente como redirección hacia `INTIMIDAD DIGITAL`.
 
 ## Estructura
@@ -59,6 +68,8 @@ novilloencaos/
     ├── despues-del-vacio/
     │   └── index.html
     ├── intimidad-digital/
+    │   └── index.html
+    ├── acarrearse-a-si-mismo/
     │   └── index.html
     └── pero-aun-asi/
         └── index.html
