@@ -3,7 +3,6 @@
   const nav = header?.querySelector('.site-nav');
   const homeHref = header?.querySelector('.brand')?.getAttribute('href') || './';
   const isSupportPage = Boolean(document.querySelector('.support-page'));
-  const isQuoteStudioPage = document.body.classList.contains('quote-studio-page');
 
   const cupIcon = () => [
     '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" aria-hidden="true">',
@@ -22,17 +21,7 @@
     return link;
   };
 
-  if (nav && !nav.querySelector('[data-quote-studio-nav]')) {
-    const quoteNav = document.createElement('a');
-    quoteNav.href = homeHref + 'citas/';
-    quoteNav.textContent = 'Citas';
-    quoteNav.setAttribute('data-quote-studio-nav', '');
-    const gitLink = [...nav.querySelectorAll('a')].find(link => link.href.includes('github.com'));
-    if (gitLink) nav.insertBefore(quoteNav, gitLink);
-    else nav.append(quoteNav);
-  }
-
-  if (header && nav && !isSupportPage && !isQuoteStudioPage && !header.querySelector('.support-utility')) {
+  if (header && nav && !isSupportPage && !header.querySelector('.support-utility')) {
     header.append(makeSupportLink('support-utility'));
   }
 
@@ -50,28 +39,6 @@
     footer.classList.add('has-support');
     const support = makeSupportLink('footer-support');
     footer.insertBefore(support, footer.lastElementChild);
-  }
-
-  if (essayBody && !isQuoteStudioPage) {
-    const essayTitle = document.querySelector('.essay-hero h1')?.textContent.trim() || 'novilloencaos';
-    const essayKicker = document.querySelector('.essay-kicker')?.textContent.trim() || 'FRAGMENTO';
-    [...essayBody.querySelectorAll('.quote-axis')].forEach((quote, index) => {
-      if (quote.querySelector('.quote-export-link')) return;
-      const quoteText = quote.textContent.trim();
-      const link = document.createElement('a');
-      const target = new URL(homeHref + 'citas/', document.baseURI);
-      target.searchParams.set('q', quoteText);
-      target.searchParams.set('source', essayTitle);
-      target.searchParams.set('meta', essayKicker);
-      target.searchParams.set('n', String(index + 1).padStart(3, '0'));
-      link.className = 'quote-export-link';
-      link.href = target.toString();
-      link.target = '_blank';
-      link.rel = 'noopener';
-      link.textContent = 'llevar a cita';
-      link.setAttribute('aria-label', 'Abrir este fragmento en el compositor de citas');
-      quote.append(link);
-    });
   }
 
   const progress = document.querySelector('.reading-progress');

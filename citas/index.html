@@ -3,18 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Compositor de citas y fragmentos de novilloencaos para captura editorial en redes sociales.">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="no-referrer">
+  <meta name="description" content="Compositor personal de citas y fragmentos de novilloencaos.">
   <title>Citas / fragmentos — novilloencaos</title>
-  <link rel="stylesheet" href="../assets/css/site.css?v=20260917-5">
-  <link rel="stylesheet" href="../assets/css/quotes.css?v=20260917-1">
+  <link rel="stylesheet" href="../assets/css/site.css?v=20260917-6">
+  <link rel="stylesheet" href="../assets/css/quotes.css?v=20260917-2">
 </head>
 <body class="site-grid quote-studio-page">
   <header class="site-header">
     <a class="brand" href="../"><i aria-hidden="true"></i><span>novilloencaos</span><small>/ captura editorial</small></a>
-    <nav class="site-nav" aria-label="Navegación principal">
-      <a href="../#archivo">Archivo</a>
-      <a href="https://github.com/NGRR/novilloencaos">Git</a>
-    </nav>
+    <nav class="site-nav" aria-label="Navegación"><a href="../#archivo">Archivo</a></nav>
   </header>
 
   <main class="quote-studio-shell">
@@ -23,25 +22,23 @@
         <span class="quote-studio-kicker">UTIL / CAPTURE / 01</span>
         <h1>Citas / fragmentos</h1>
       </div>
-      <p>Pega un fragmento o abre una cita marcada desde un ensayo. La pieza se compone como una lámina del archivo: sin apoyo, sin botón de tecito y con una superficie limpia para captura.</p>
+      <p>Herramienta personal de composición. La previsualización conserva una mesa de 1080 px y se escala completa en pantalla; la exportación genera el PNG en su resolución editorial real.</p>
     </header>
 
     <div class="quote-studio-layout">
       <aside class="quote-controls" aria-label="Controles de la cita">
         <label class="control-field control-field-wide">
+          <span>Extractos preformateados</span>
+          <select id="presetInput"><option value="">— seleccionar cita —</option></select>
+        </label>
+
+        <label class="control-field control-field-wide">
           <span>Texto</span>
-          <textarea id="quoteInput" rows="10" maxlength="900"></textarea>
+          <textarea id="quoteInput" rows="9" maxlength="900"></textarea>
         </label>
 
-        <label class="control-field">
-          <span>Fuente</span>
-          <input id="sourceInput" type="text" maxlength="90">
-        </label>
-
-        <label class="control-field">
-          <span>Referencia</span>
-          <input id="metaInput" type="text" maxlength="90">
-        </label>
+        <label class="control-field"><span>Fuente</span><input id="sourceInput" type="text" maxlength="90"></label>
+        <label class="control-field"><span>Referencia</span><input id="metaInput" type="text" maxlength="90"></label>
 
         <label class="control-field">
           <span>Formato</span>
@@ -54,76 +51,68 @@
 
         <label class="control-field">
           <span>Cuerpo <output id="fontOutput">48</output></span>
-          <input id="fontInput" type="range" min="30" max="68" step="1" value="48">
+          <input id="fontInput" type="range" min="24" max="68" step="1" value="48">
         </label>
 
-        <label class="control-check">
-          <input id="gridInput" type="checkbox" checked>
-          <span>retícula</span>
-        </label>
-
-        <label class="control-check">
-          <input id="marksInput" type="checkbox" checked>
-          <span>cotas</span>
-        </label>
+        <label class="control-check"><input id="gridInput" type="checkbox" checked><span>retícula</span></label>
+        <label class="control-check"><input id="marksInput" type="checkbox" checked><span>cotas</span></label>
 
         <div class="control-actions">
           <button id="fitButton" type="button">ajuste auto</button>
+          <button id="exportButton" class="action-primary" type="button">exportar PNG</button>
+          <button id="copyImageButton" type="button">copiar PNG</button>
           <button id="captureButton" type="button">vista limpia</button>
           <button id="linkButton" type="button">copiar enlace</button>
           <button id="resetButton" type="button">muestra inicial</button>
         </div>
 
-        <p class="control-note">En vista limpia, <kbd>Esc</kbd> devuelve los controles. El borrador queda guardado localmente en este navegador.</p>
+        <p class="control-note">PNG real: 1080 × 1350, 1080 × 1080 o 1080 × 1920 px. En vista limpia, <kbd>Esc</kbd> devuelve los controles. El borrador queda guardado localmente.</p>
       </aside>
 
-      <section class="quote-card-stage" aria-label="Previsualización de la cita">
-        <article class="quote-card" id="quoteCard" data-ratio="4:5">
-          <span class="crop crop-tl" aria-hidden="true"></span>
-          <span class="crop crop-tr" aria-hidden="true"></span>
-          <span class="crop crop-bl" aria-hidden="true"></span>
-          <span class="crop crop-br" aria-hidden="true"></span>
+      <section class="quote-card-stage" id="quoteStage" aria-label="Previsualización de la cita">
+        <div class="quote-card-viewport" id="quoteViewport">
+          <article class="quote-card" id="quoteCard" data-ratio="4:5">
+            <span class="crop crop-tl" aria-hidden="true"></span>
+            <span class="crop crop-tr" aria-hidden="true"></span>
+            <span class="crop crop-bl" aria-hidden="true"></span>
+            <span class="crop crop-br" aria-hidden="true"></span>
+            <div class="quote-grid" aria-hidden="true"></div>
+            <div class="quote-blue-rule" aria-hidden="true"></div>
 
-          <div class="quote-grid" aria-hidden="true"></div>
-          <div class="quote-blue-rule" aria-hidden="true"></div>
+            <header class="quote-card-head">
+              <div class="quote-brand"><i aria-hidden="true"></i><span>novilloencaos</span></div>
+              <div class="quote-head-code"><span>FRAG. / <b id="fragmentNumber">001</b></span><span>ARCHIVO / 2026</span></div>
+            </header>
 
-          <header class="quote-card-head">
-            <div class="quote-brand"><i aria-hidden="true"></i><span>novilloencaos</span></div>
-            <div class="quote-head-code"><span>FRAG. / <b id="fragmentNumber">001</b></span><span>ARCHIVO / 2026</span></div>
-          </header>
+            <div class="measure measure-left" aria-hidden="true"><span>Y / 000</span><i></i><span id="measureY">Y / 1350</span></div>
+            <div class="measure measure-top" aria-hidden="true"><span>X / 000</span><i></i><span>X / 1080</span></div>
 
-          <div class="measure measure-left" aria-hidden="true"><span>Y / 000</span><i></i><span>Y / 1350</span></div>
-          <div class="measure measure-top" aria-hidden="true"><span>X / 000</span><i></i><span>X / 1080</span></div>
+            <div class="quote-axis-card">
+              <span class="quote-axis-label">FIG. / AXIS</span>
+              <blockquote id="quoteOutput" contenteditable="true" spellcheck="true"></blockquote>
+              <footer class="quote-source"><span id="sourceOutput"></span><span id="metaOutput"></span></footer>
+            </div>
 
-          <div class="quote-axis-card">
-            <span class="quote-axis-label">FIG. / AXIS</span>
-            <blockquote id="quoteOutput" contenteditable="true" spellcheck="true"></blockquote>
-            <footer class="quote-source">
-              <span id="sourceOutput"></span>
-              <span id="metaOutput"></span>
+            <aside class="social-mark" aria-label="Instagram novilloencaos">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3.25" y="3.25" width="17.5" height="17.5" rx="5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                <circle cx="12" cy="12" r="4.1" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                <circle cx="17.4" cy="6.8" r="1" fill="currentColor"/>
+              </svg>
+              <span>@novilloencaos</span>
+            </aside>
+
+            <footer class="quote-card-foot">
+              <span id="ratioOutput">1080 × 1350 / 4:5</span>
+              <span id="countOutput">W / 000 · C / 000</span>
+              <span>ED. / NGRR</span>
             </footer>
-          </div>
-
-          <aside class="social-mark" aria-label="Instagram novilloencaos">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <rect x="3.25" y="3.25" width="17.5" height="17.5" rx="5" fill="none" stroke="currentColor" stroke-width="1.5"/>
-              <circle cx="12" cy="12" r="4.1" fill="none" stroke="currentColor" stroke-width="1.5"/>
-              <circle cx="17.4" cy="6.8" r="1" fill="currentColor"/>
-            </svg>
-            <span>@novilloencaos</span>
-          </aside>
-
-          <footer class="quote-card-foot">
-            <span id="ratioOutput">1080 × 1350 / 4:5</span>
-            <span id="countOutput">W / 000 · C / 000</span>
-            <span>ED. / NGRR</span>
-          </footer>
-        </article>
+          </article>
+        </div>
       </section>
     </div>
   </main>
 
-  <script src="../assets/js/site.js?v=20260917-5"></script>
-  <script src="../assets/js/quotes.js?v=20260917-1"></script>
+  <script src="../assets/js/quotes.js?v=20260917-2"></script>
 </body>
 </html>

@@ -178,30 +178,6 @@ Obra utilizada actualmente en la portada del archivo.
 Contiene los recursos visuales asociados al segundo ensayo.
 
 
-## Captura de citas
-
-El archivo incorpora un compositor estático para transformar citas y fragmentos breves en láminas listas para captura:
-
-```text
-/citas/
-```
-
-La interfaz reutiliza el sistema gráfico de novilloencaos —retícula, ejes, cotas, coordenadas, numeración, Source Serif e IBM Plex Mono— y añade una firma vertical de Instagram `@novilloencaos`. No incluye el componente `invita un tecito`.
-
-Funciones actuales:
-
-- pegar o editar manualmente un fragmento;
-- abrir directamente las citas marcadas con `.quote-axis` desde los ensayos mediante `llevar a cita`;
-- formatos 4:5, 1:1 y 9:16;
-- control de cuerpo tipográfico;
-- ajuste automático según longitud;
-- activación/desactivación de retícula y cotas;
-- modo de vista limpia para captura;
-- persistencia local del borrador;
-- URL parametrizable para conservar o compartir una composición.
-
-Los parámetros admitidos son `q`, `source`, `meta`, `ratio` y `n`.
-
 ## Convenciones de publicación
 
 Al incorporar una pieza consolidada:
