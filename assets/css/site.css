@@ -102,9 +102,17 @@ a:hover{color:var(--blue)}
 .support-utility:hover,
 .support-utility:focus-visible{transform:translateY(1px)}
 .article-support{
+  display:flex;
+  align-items:center;
+  gap:.8rem;
+  flex-wrap:wrap;
   margin:0 0 1rem;
   padding:2rem 0 0;
   border-top:1px solid var(--line);
+}
+.article-support-copy{
+  font:400 .94rem/1.4 var(--serif);
+  color:#4b5057;
 }
 .site-footer.has-support{
   grid-template-columns:1fr auto auto;
@@ -357,6 +365,8 @@ a:hover{color:var(--blue)}
   .closing-question{font-size:clamp(1.55rem,8vw,2.1rem)}
   .support-utility{top:calc(100% + .45rem);min-height:30px;padding:.46rem .64rem;font-size:.56rem}
   .support-cta svg{width:14px;height:14px;flex-basis:14px}
+  .article-support{gap:.65rem}
+  .article-support-copy{font-size:.9rem}
   .hero-art{gap:.45rem;margin-bottom:1.5rem}
   .hero-art figcaption{font-size:.5rem}
   .site-footer,.site-footer.has-support{grid-template-columns:1fr}

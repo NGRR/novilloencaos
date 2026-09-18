@@ -29,7 +29,12 @@
   if (essayBody && !essayBody.querySelector('.article-support')) {
     const wrap = document.createElement('div');
     wrap.className = 'article-support';
-    wrap.append(makeSupportLink('article-support-button'));
+
+    const prompt = document.createElement('span');
+    prompt.className = 'article-support-copy';
+    prompt.textContent = 'si te gustó lo que leíste';
+
+    wrap.append(prompt, makeSupportLink('article-support-button'));
     essayBody.append(wrap);
   }
 
