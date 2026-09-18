@@ -41,6 +41,15 @@ Ruta:
 /ensayos/acarrearse-a-si-mismo/
 ```
 
+**004 — No convertirse en el mensaje**  
+Texto cerrado originalmente en 2018 y revisado editorialmente en 2026. Ensayo sobre solidaridad, apropiación, representación, camuflaje ideológico y responsabilidad.
+
+Ruta:
+
+```text
+/ensayos/no-convertirse-en-el-mensaje/
+```
+
 La ruta histórica `/ensayos/pero-aun-asi/` se conserva únicamente como redirección hacia `INTIMIDAD DIGITAL`.
 
 ## Estructura
@@ -70,6 +79,8 @@ novilloencaos/
     ├── intimidad-digital/
     │   └── index.html
     ├── acarrearse-a-si-mismo/
+    │   └── index.html
+    ├── no-convertirse-en-el-mensaje/
     │   └── index.html
     └── pero-aun-asi/
         └── index.html
