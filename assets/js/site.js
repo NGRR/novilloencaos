@@ -3,6 +3,7 @@
   const nav = header?.querySelector('.site-nav');
   const homeHref = header?.querySelector('.brand')?.getAttribute('href') || './';
   const isSupportPage = Boolean(document.querySelector('.support-page'));
+  const isEssayPage = Boolean(document.querySelector('.essay-body'));
 
   const cupIcon = () => [
     '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" aria-hidden="true">',
@@ -22,7 +23,8 @@
   };
 
   if (header && nav && !isSupportPage && !header.querySelector('.support-utility')) {
-    header.append(makeSupportLink('support-utility'));
+    const support = makeSupportLink('support-utility' + (isEssayPage ? ' support-utility--article' : ''));
+    header.after(support);
   }
 
   const essayBody = document.querySelector('.essay-body');
@@ -32,9 +34,9 @@
 
     const prompt = document.createElement('span');
     prompt.className = 'article-support-copy';
-    prompt.textContent = 'si te gustó lo que leíste';
+    prompt.textContent = 'si esto movió algo de lugar';
 
-    wrap.append(prompt, makeSupportLink('article-support-button'));
+    wrap.append(prompt, makeSupportLink('article-support-button support-cta--article'));
     essayBody.append(wrap);
   }
 
