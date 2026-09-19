@@ -7,8 +7,8 @@
   <meta name="referrer" content="no-referrer">
   <meta name="description" content="Compositor personal de citas y fragmentos de novilloencaos.">
   <title>Citas / fragmentos — novilloencaos</title>
-  <link rel="stylesheet" href="../assets/css/site.css?v=20260917-6">
-  <link rel="stylesheet" href="../assets/css/quotes.css?v=20260917-2">
+  <link rel="stylesheet" href="../assets/css/site.css?v=20260919-1">
+  <link rel="stylesheet" href="../assets/css/quotes.css?v=20260919-1">
 </head>
 <body class="site-grid quote-studio-page">
   <header class="site-header">
@@ -19,7 +19,7 @@
   <main class="quote-studio-shell">
     <header class="quote-studio-heading">
       <div>
-        <span class="quote-studio-kicker">UTIL / CAPTURE / 01</span>
+        <span class="quote-studio-kicker">UTIL / PRIVATE NODE / NVC-01</span>
         <h1>Citas / fragmentos</h1>
       </div>
       <p>Herramienta personal de composición. La previsualización conserva una mesa de 1080 px y se escala completa en pantalla; la exportación genera el PNG en su resolución editorial real.</p>
@@ -37,8 +37,11 @@
           <textarea id="quoteInput" rows="9" maxlength="900"></textarea>
         </label>
 
-        <label class="control-field"><span>Fuente</span><input id="sourceInput" type="text" maxlength="90"></label>
-        <label class="control-field"><span>Referencia</span><input id="metaInput" type="text" maxlength="90"></label>
+        <label class="control-field"><span>Obra</span><input id="sourceInput" type="text" maxlength="90"></label>
+        <label class="control-field"><span>Sección</span><input id="metaInput" type="text" maxlength="90"></label>
+        <label class="control-field"><span>Registro</span><input id="recordInput" type="text" maxlength="24"></label>
+        <label class="control-field"><span>Tipo</span><input id="kindInput" type="text" maxlength="24"></label>
+        <label class="control-field control-field-wide"><span>Naturaleza</span><select id="modeInput"><option value="EXTRACTO">extracto textual</option><option value="SÍNTESIS">síntesis editorial</option></select></label>
 
         <label class="control-field">
           <span>Formato</span>
@@ -50,8 +53,8 @@
         </label>
 
         <label class="control-field">
-          <span>Cuerpo <output id="fontOutput">48</output></span>
-          <input id="fontInput" type="range" min="24" max="68" step="1" value="48">
+          <span>Cuerpo <output id="fontOutput">30</output></span>
+          <input id="fontInput" type="range" min="18" max="30" step="1" value="30">
         </label>
 
         <label class="control-check"><input id="gridInput" type="checkbox" checked><span>retícula</span></label>
@@ -81,7 +84,7 @@
 
             <header class="quote-card-head">
               <div class="quote-brand"><i aria-hidden="true"></i><span>novilloencaos</span></div>
-              <div class="quote-head-code"><span>FRAG. / <b id="fragmentNumber">001</b></span><span>ARCHIVO / 2026</span></div>
+              <div class="quote-head-code"><span id="recordOutput">REC://7E-A1</span><span><b id="kindOutput">ENSAYO</b> / <span id="modeOutput">EXTRACTO</span></span></div>
             </header>
 
             <div class="measure measure-left" aria-hidden="true"><span>Y / 000</span><i></i><span id="measureY">Y / 1350</span></div>
@@ -105,7 +108,7 @@
             <footer class="quote-card-foot">
               <span id="ratioOutput">1080 × 1350 / 4:5</span>
               <span id="countOutput">W / 000 · C / 000</span>
-              <span>ED. / NGRR</span>
+              <span>NODE / NVC-01</span>
             </footer>
           </article>
         </div>
@@ -113,6 +116,6 @@
     </div>
   </main>
 
-  <script src="../assets/js/quotes.js?v=20260917-2"></script>
+  <script src="../assets/js/quotes.js?v=20260919-1"></script>
 </body>
 </html>
