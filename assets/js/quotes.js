@@ -7,6 +7,12 @@
     '9:16': { width: 1080, height: 1920, label: '1080 × 1920 / 9:16' }
   };
 
+  // El control 18–30 representa una escala editorial, no píxeles físicos.
+  // La mesa de salida trabaja a 1080 px y necesita una conversión proporcional.
+  const TYPO_SCALE = { '4:5': 2.25, '1:1': 2.15, '9:16': 2.4 };
+  const actualFontSize = (value, ratio = state?.ratio || '4:5') =>
+    Math.round(Number(value) * (TYPO_SCALE[ratio] || TYPO_SCALE['4:5']) * 10) / 10;
+
   const presets = [
     {record:'REC://7E-A1',kind:'ENSAYO',mode:'EXTRACTO',source:'Después del Vacío',section:'GÉNESIS DEL VÍNCULO',quote:'La paradoja es clara: el vínculo más alto entre humano y máquina sería aquel que prepara su propia disolución.'},
     {record:'REC://7E-A1',kind:'ENSAYO',mode:'EXTRACTO',source:'Después del Vacío',section:'COEVOLUCIÓN Y CIRCUITO RECURSIVO',quote:'La inteligencia compartida no nace de la comodidad, sino de la fricción significativa.'},
@@ -120,9 +126,9 @@
     el.quoteCard.dataset.ratio=state.ratio;
     el.quoteCard.classList.toggle('no-grid',!state.grid);
     el.quoteCard.classList.toggle('no-marks',!state.marks);
-    el.quoteCard.style.setProperty('--quote-size',state.font+'px');
+    el.quoteCard.style.setProperty('--quote-size',actualFontSize(state.font,state.ratio)+'px');
 
-    el.fontOutput.textContent=state.font;
+    el.fontOutput.textContent=state.font+' / '+Math.round(actualFontSize(state.font,state.ratio))+'px';
     el.ratioOutput.textContent=dims.label;
     el.measureY.textContent='Y / '+dims.height;
 
@@ -134,12 +140,24 @@
   };
 
   const autoFit=()=>{
-    const n=state.quote.trim().length;
-    let size=30;
-    if(state.ratio==='9:16') size=n<120?30:n<260?28:n<420?25:n<600?22:19;
-    else if(state.ratio==='1:1') size=n<100?30:n<190?27:n<300?24:n<430?21:18;
-    else size=n<110?30:n<220?28:n<340?25:n<500?22:19;
-    state.font=Math.max(18,Math.min(30,size));
+    const dims=DIMENSIONS[state.ratio];
+    const ctx=document.createElement('canvas').getContext('2d');
+    const maxWidth=724;
+    const maxBlock=(dims.height*.85-dims.height*.19)-96;
+    let selected=18;
+
+    for(let control=30;control>=18;control--){
+      const px=actualFontSize(control,state.ratio);
+      ctx.font='400 '+px+'px "Source Serif 4", Georgia, serif';
+      const lines=wrapLines(ctx,state.quote,maxWidth);
+      const blockHeight=lines.length*(px*1.29)+58;
+      if(blockHeight<=maxBlock){
+        selected=control;
+        break;
+      }
+    }
+
+    state.font=selected;
     render();
   };
 
@@ -231,13 +249,15 @@
     ctx.fillStyle=blue;ctx.fillRect(axisX,axisTop,3,axisBottom-axisTop);
     if(state.marks){ctx.fillStyle=muted;ctx.font='500 11px "IBM Plex Mono", monospace';ctx.fillText('FIG. / AXIS',axisX,axisTop-18)}
 
-    let fontSize=Math.min(30,state.font),lineHeight=fontSize*1.29,lines,maxBlock=(axisBottom-axisTop)-96;
+    let controlSize=Math.max(18,Math.min(30,state.font));
+    let fontSize=actualFontSize(controlSize,state.ratio),lineHeight=fontSize*1.29,lines,maxBlock=(axisBottom-axisTop)-96;
     do{
       ctx.font='400 '+fontSize+'px "Source Serif 4", Georgia, serif';
       lines=wrapLines(ctx,state.quote,maxWidth);lineHeight=fontSize*1.29;
-      if(lines.length*lineHeight+58<=maxBlock||fontSize<=18) break;
-      fontSize--;
-    }while(fontSize>17);
+      if(lines.length*lineHeight+58<=maxBlock||controlSize<=18) break;
+      controlSize--;
+      fontSize=actualFontSize(controlSize,state.ratio);
+    }while(controlSize>=18);
 
     const quoteHeight=lines.length*lineHeight,total=quoteHeight+58;
     let y=axisTop+((axisBottom-axisTop)-total)/2+fontSize;
@@ -285,8 +305,14 @@
     autoFit();
   });
 
-  [el.quoteInput,el.sourceInput,el.metaInput,el.recordInput,el.kindInput,el.modeInput,el.ratioInput,el.fontInput,el.gridInput,el.marksInput]
+  [el.quoteInput,el.sourceInput,el.metaInput,el.recordInput,el.kindInput,el.modeInput,el.fontInput,el.gridInput,el.marksInput]
     .forEach(input=>input.addEventListener('input',sync));
+
+  el.ratioInput.addEventListener('change',()=>{
+    state.ratio=el.ratioInput.value;
+    el.presetInput.value='';
+    autoFit();
+  });
 
   el.quoteOutput.addEventListener('input',()=>{state.quote=el.quoteOutput.textContent||'';el.presetInput.value='';render()});
   el.fitButton.addEventListener('click',autoFit);

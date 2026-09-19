@@ -1,4 +1,4 @@
-:root{--quote-size:30px;--quote-aspect:.8}
+:root{--quote-size:67.5px;--quote-aspect:.8}
 .quote-studio-shell{max-width:94rem;margin:0 auto;padding:5rem var(--gutter) 7rem}
 .quote-studio-heading{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,.7fr);gap:clamp(2rem,7vw,7rem);align-items:end;padding-bottom:2rem;border-bottom:1px solid var(--ink)}
 .quote-studio-kicker{display:block;margin-bottom:1.1rem;color:var(--blue);font:500 .66rem/1 var(--mono);letter-spacing:.1em}
