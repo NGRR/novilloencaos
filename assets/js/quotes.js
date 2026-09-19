@@ -273,7 +273,19 @@
 
     const socialX=1032,socialY=dims.height*.77;
     drawInstagram(ctx,socialX,socialY,18);
-    ctx.save();ctx.translate(socialX+4,socialY+24);ctx.rotate(-Math.PI/2);ctx.font='500 10px "IBM Plex Mono", monospace';ctx.fillStyle=ink;ctx.fillText('@novilloencaos',0,0);ctx.restore();
+
+    // Mantener el handle debajo del ícono también en la rasterización.
+    // Con rotación -90°, textAlign:right hace que el texto crezca hacia abajo,
+    // evitando que vuelva sobre el área ocupada por el logo.
+    ctx.save();
+    ctx.translate(socialX+4,socialY+38);
+    ctx.rotate(-Math.PI/2);
+    ctx.font='500 10px "IBM Plex Mono", monospace';
+    ctx.fillStyle=ink;
+    ctx.textAlign='right';
+    ctx.textBaseline='middle';
+    ctx.fillText('@novilloencaos',0,0);
+    ctx.restore();
 
     const footerY=dims.height-68;
     ctx.strokeStyle=ink;ctx.beginPath();ctx.moveTo(46,footerY);ctx.lineTo(1034,footerY);ctx.stroke();
