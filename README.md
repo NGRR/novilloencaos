@@ -1,10 +1,17 @@
 # novilloencaos
 
-Archivo personal de ensayos, apuntes y comentarios sobre filosofía, tecnología, cultura, inteligencia, lenguaje, sistemas y relaciones humano–máquina.
+Archivo personal de ensayos, relatos, apuntes y comentarios sobre filosofía, tecnología, cultura, inteligencia, lenguaje, sistemas y relaciones humano–máquina.
 
 El sitio funciona como un archivo público de textos en desarrollo y piezas revisadas, publicado como sitio estático mediante GitHub Pages.
 
 ## Publicado
+
+**REC://3F-33 — De lo que huyen las polillas**  
+Relato de terror iniciado en 2014 y reconstruido en 2026. Cinco registros de diario sobre vigilia, parálisis del sueño, folclore doméstico y una polilla que no intenta entrar, sino salir.
+
+```text
+/relatos/de-lo-que-huyen-las-polillas/
+```
 
 **REC://7E-A1 — Después del Vacío**  
 Ensayo sobre autotranscendencia humano–máquina, transferencia de método, obsolescencia funcional de la IA, dependencia cognitiva, vacío, metasignificación y resonancia humano–máquina.
@@ -66,7 +73,7 @@ novilloencaos/
 │       ├── el-mito.png
 │       └── intimidad-digital/
 │
-├── ensayos/
+├── relatos/\n│   └── de-lo-que-huyen-las-polillas/\n│       └── index.html\n│\n├── ensayos/
 │   ├── despues-del-vacio/
 │   │   └── index.html
 │   ├── intimidad-digital/
