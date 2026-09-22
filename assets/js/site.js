@@ -146,6 +146,165 @@
   const isSupportPage = Boolean(document.querySelector('.support-page'));
   const isEssayPage = Boolean(document.querySelector('.essay-body'));
 
+  const GISCUS_CONFIG = {
+    repo: 'NGRR/novilloencaos',
+    repoId: 'R_kgDOUe7wZA',
+    category: 'Announcements',
+    categoryId: '__PENDING_GISCUS_CATEGORY_ID__'
+  };
+  const GISCUS_READY = !GISCUS_CONFIG.categoryId.startsWith('__PENDING_');
+  const teaCounts = new Map();
+
+  const normalizeRecord = value => (value || '').trim().toUpperCase();
+  const recordFromArchiveItem = item => normalizeRecord(item?.querySelector('.archive-code')?.textContent?.match(/REC:\/\/[A-Z0-9-]+/i)?.[0]);
+  const articleRecord = () => normalizeRecord(contentMeta()?.content_record || document.querySelector('.essay-kicker')?.textContent?.match(/REC:\/\/[A-Z0-9-]+/i)?.[0]);
+  const discussionTerm = record => 'novilloencaos:' + record;
+
+  const teaCountUrl = () => new URL(homeHref + 'assets/data/tea-counts.json', location.href);
+  const loadTeaCounts = async () => {
+    try {
+      const response = await fetch(teaCountUrl(), { cache: 'no-store' });
+      if (!response.ok) return;
+      const data = await response.json();
+      Object.entries(data).forEach(([record, count]) => teaCounts.set(normalizeRecord(record), Number(count) || 0));
+      document.querySelectorAll('[data-tea-count-for]').forEach(node => {
+        const record = normalizeRecord(node.dataset.teaCountFor);
+        node.textContent = String(teaCounts.get(record) ?? 0);
+      });
+    } catch {
+      // El contador de apoyo no bloquea la lectura ni la interacción.
+    }
+  };
+
+  const discussionMetaCounts = discussion => {
+    const comments = Number(discussion?.totalCommentCount ?? discussion?.comments?.totalCount ?? 0);
+    const reactions = Number(discussion?.reactionCount ?? discussion?.reactions?.totalCount ?? 0);
+    return { comments, reactions };
+  };
+
+  const bindGiscusMetadata = shell => {
+    const handler = event => {
+      if (event.origin !== 'https://giscus.app') return;
+      if (!(event.data && typeof event.data === 'object' && event.data.giscus?.discussion)) return;
+      const iframe = shell.querySelector('iframe.giscus-frame');
+      if (!iframe || event.source !== iframe.contentWindow) return;
+      const counts = discussionMetaCounts(event.data.giscus.discussion);
+      const notes = shell.querySelector('[data-notes-count]');
+      const resonances = shell.querySelector('[data-resonance-count]');
+      if (notes) notes.textContent = String(counts.comments);
+      if (resonances) resonances.textContent = String(counts.reactions);
+    };
+    window.addEventListener('message', handler);
+  };
+
+  const loadGiscus = shell => {
+    if (shell.dataset.giscusLoaded === '1') return;
+    shell.dataset.giscusLoaded = '1';
+    const mount = shell.querySelector('.nvc-giscus-mount');
+    if (!mount) return;
+
+    if (!GISCUS_READY) {
+      mount.innerHTML = '<p class="nvc-discussion-offline">NOTAS / temporalmente fuera de línea.</p>';
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://giscus.app/client.js';
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    script.dataset.repo = GISCUS_CONFIG.repo;
+    script.dataset.repoId = GISCUS_CONFIG.repoId;
+    script.dataset.category = GISCUS_CONFIG.category;
+    script.dataset.categoryId = GISCUS_CONFIG.categoryId;
+    script.dataset.mapping = 'specific';
+    script.dataset.term = discussionTerm(shell.dataset.record);
+    script.dataset.strict = '1';
+    script.dataset.reactionsEnabled = '1';
+    script.dataset.emitMetadata = '1';
+    script.dataset.inputPosition = 'top';
+    script.dataset.theme = 'light';
+    script.dataset.lang = 'es';
+    script.dataset.loading = 'lazy';
+    mount.appendChild(script);
+    bindGiscusMetadata(shell);
+  };
+
+  const createInteractionShell = (record, articleHref, variant = 'archive') => {
+    if (!record) return null;
+    const shell = document.createElement('section');
+    shell.className = 'nvc-interactions nvc-interactions--' + variant;
+    shell.dataset.record = record;
+    shell.innerHTML = [
+      '<div class="nvc-interaction-bar">',
+      '<button type="button" class="nvc-interaction" data-open-discussion="resonance" aria-expanded="false">',
+      '<span class="nvc-interaction-symbol" aria-hidden="true">♡</span><span>resonancias</span><span class="nvc-interaction-count" data-resonance-count>—</span>',
+      '</button>',
+      '<button type="button" class="nvc-interaction" data-open-discussion="notes" aria-expanded="false">',
+      '<span class="nvc-interaction-symbol" aria-hidden="true">◌</span><span>notas</span><span class="nvc-interaction-count" data-notes-count>—</span>',
+      '</button>',
+      '<a class="nvc-interaction nvc-tea-count" href="' + homeHref + 'apoyar/?ref=' + encodeURIComponent(record) + '" data-analytics="tea" aria-label="Invita un tecito">',
+      cupIcon() + '<span class="nvc-interaction-count" data-tea-count-for="' + record + '">0</span>',
+      '</a>',
+      '</div>',
+      '<div class="nvc-discussion" hidden>',
+      '<div class="nvc-discussion-head"><span>NOTAS / LECTORES</span><button type="button" data-close-discussion aria-label="Cerrar notas">cerrar ×</button></div>',
+      '<div class="nvc-giscus-mount"></div>',
+      '</div>'
+    ].join('');
+    if (articleHref) shell.dataset.articleHref = articleHref;
+    return shell;
+  };
+
+  const toggleDiscussion = shell => {
+    const panel = shell.querySelector('.nvc-discussion');
+    if (!panel) return;
+    const open = panel.hidden;
+    panel.hidden = !open;
+    shell.querySelectorAll('[data-open-discussion]').forEach(button => button.setAttribute('aria-expanded', String(open)));
+    if (open) {
+      loadGiscus(shell);
+      sendEvent('comment_open', { content_record: shell.dataset.record, content_path: location.pathname });
+      window.requestAnimationFrame(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+    }
+  };
+
+  const initInteractions = () => {
+    document.querySelectorAll('.archive-item').forEach(item => {
+      if (item.querySelector('.nvc-interactions')) return;
+      const record = recordFromArchiveItem(item);
+      const href = item.querySelector('.archive-title')?.getAttribute('href') || '';
+      const shell = createInteractionShell(record, href, 'archive');
+      if (shell) item.appendChild(shell);
+    });
+
+    if (essayBody && !essayBody.querySelector('.nvc-interactions')) {
+      const record = articleRecord();
+      const shell = createInteractionShell(record, location.pathname, 'article');
+      if (shell) essayBody.appendChild(shell);
+    }
+
+    document.addEventListener('click', event => {
+      const open = event.target.closest('[data-open-discussion]');
+      if (open) {
+        const shell = open.closest('.nvc-interactions');
+        if (shell) {
+          if (open.dataset.openDiscussion === 'resonance') sendEvent('article_reaction_open', { content_record: shell.dataset.record, content_path: location.pathname });
+          toggleDiscussion(shell);
+        }
+        return;
+      }
+      const close = event.target.closest('[data-close-discussion]');
+      if (close) {
+        const shell = close.closest('.nvc-interactions');
+        const panel = shell?.querySelector('.nvc-discussion');
+        if (panel) panel.hidden = true;
+        shell?.querySelectorAll('[data-open-discussion]').forEach(button => button.setAttribute('aria-expanded', 'false'));
+      }
+    });
+
+    loadTeaCounts();
+  };
+
   const cupIcon = () => [
     '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" aria-hidden="true">',
     '<path d="M5.5 8.5h10v4.25a4.75 4.75 0 0 1-4.75 4.75h-.5a4.75 4.75 0 0 1-4.75-4.75V8.5Z" stroke="currentColor" stroke-width="1.25"/>',
@@ -170,17 +329,6 @@
   }
 
   const essayBody = document.querySelector('.essay-body');
-  if (essayBody && !essayBody.querySelector('.article-support')) {
-    const wrap = document.createElement('div');
-    wrap.className = 'article-support';
-
-    const prompt = document.createElement('span');
-    prompt.className = 'article-support-copy';
-    prompt.textContent = 'si esto movió algo de lugar';
-
-    wrap.append(prompt, makeSupportLink('article-support-button support-cta--article'));
-    essayBody.append(wrap);
-  }
 
   const archive = document.querySelector('.archive');
   const footer = document.querySelector('.site-footer');
@@ -392,6 +540,7 @@
     }
   };
 
+  initInteractions();
   initConsent();
 
 })();
