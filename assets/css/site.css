@@ -438,8 +438,13 @@ a:hover{color:var(--blue)}
   color:var(--ink);
   outline:none;
 }
+.nvc-interaction.is-active,
 .nvc-interaction[aria-expanded="true"]{
   color:var(--blue);
+}
+.nvc-interaction:disabled{
+  opacity:.45;
+  cursor:wait;
 }
 .nvc-interaction-symbol{
   font-size:.86rem;
@@ -456,12 +461,25 @@ a:hover{color:var(--blue)}
   height:14px;
   flex:0 0 14px;
 }
-.nvc-discussion{
+
+.nvc-community-status{
+  margin:.35rem 0 0;
+  color:var(--muted);
+  font:400 .58rem/1.45 var(--mono);
+  letter-spacing:.035em;
+}
+.nvc-community-status[data-state="error"]{color:#7b2c2c}
+.nvc-community-status[data-state="success"]{color:#315d34}
+.nvc-interactions.is-pending .nvc-interaction-count:not([data-tea-count-for]){
+  color:var(--line-strong);
+}
+
+.nvc-notes-panel{
   margin-top:1rem;
   padding:1rem 0 0;
   border-top:1px solid var(--line);
 }
-.nvc-discussion[hidden]{display:none}
+.nvc-notes-panel[hidden]{display:none}
 .nvc-discussion-head{
   display:flex;
   justify-content:space-between;
@@ -486,18 +504,119 @@ a:hover{color:var(--blue)}
   color:var(--ink);
   outline:none;
 }
-.nvc-giscus-mount,
-.nvc-giscus-mount .giscus,
-.nvc-giscus-mount .giscus-frame{
-  width:100%;
+
+.nvc-notes-list{
+  display:grid;
+  gap:0;
+  margin:0 0 1.25rem;
 }
-.nvc-discussion-offline{
-  margin:.75rem 0 0;
-  padding:.9rem 0;
-  border-top:1px dashed var(--line-strong);
+.nvc-notes-empty{
+  margin:0;
+  padding:.85rem 0 1rem;
   color:var(--muted);
-  font:400 .62rem/1.5 var(--mono);
-  letter-spacing:.05em;
+  font:400 .68rem/1.55 var(--mono);
+  border-bottom:1px solid var(--line);
+}
+.nvc-note{
+  padding:1rem 0 1.1rem;
+  border-top:1px solid var(--line);
+}
+.nvc-note:first-child{border-top:0}
+.nvc-note-meta{
+  display:flex;
+  justify-content:space-between;
+  gap:1rem;
+  margin:0 0 .45rem;
+  color:var(--muted);
+  font:500 .58rem/1.35 var(--mono);
+  letter-spacing:.045em;
+  text-transform:lowercase;
+}
+.nvc-note p{
+  margin:0;
+  color:#2f3338;
+  font:400 .94rem/1.58 var(--serif);
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+
+.nvc-note-form{
+  position:relative;
+  display:grid;
+  gap:.85rem;
+  margin-top:1rem;
+  padding:1rem 0 0;
+  border-top:1px solid var(--line-strong);
+}
+.nvc-note-form label{
+  display:grid;
+  gap:.35rem;
+}
+.nvc-note-form label>span{
+  color:var(--muted);
+  font:500 .56rem/1 var(--mono);
+  letter-spacing:.07em;
+  text-transform:uppercase;
+}
+.nvc-note-form input,
+.nvc-note-form textarea{
+  width:100%;
+  border:1px solid var(--line-strong);
+  border-radius:0;
+  background:rgba(255,255,255,.55);
+  color:var(--ink);
+  padding:.7rem .75rem;
+  font:400 .76rem/1.5 var(--mono);
+  resize:vertical;
+}
+.nvc-note-form textarea{
+  min-height:7.2rem;
+  font-family:var(--serif);
+  font-size:.95rem;
+}
+.nvc-note-form input:focus,
+.nvc-note-form textarea:focus{
+  border-color:var(--ink);
+  outline:none;
+  background:#fff;
+}
+.nvc-note-form-foot{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:1rem;
+}
+.nvc-note-form-foot>span{
+  color:var(--muted);
+  font:400 .56rem/1.4 var(--mono);
+}
+.nvc-note-form button[type="submit"]{
+  appearance:none;
+  border:1px solid var(--ink);
+  background:var(--ink);
+  color:#fff;
+  min-height:34px;
+  padding:.55rem .8rem;
+  font:500 .6rem/1 var(--mono);
+  cursor:pointer;
+}
+.nvc-note-form button[type="submit"]:hover,
+.nvc-note-form button[type="submit"]:focus-visible{
+  background:#2a2d31;
+  outline:none;
+}
+.nvc-note-form button[type="submit"]:disabled{
+  opacity:.5;
+  cursor:wait;
+}
+.nvc-honeypot{
+  position:absolute!important;
+  left:-9999px!important;
+  width:1px!important;
+  height:1px!important;
+  overflow:hidden!important;
+  opacity:0!important;
+  pointer-events:none!important;
 }
 
 @media(max-width:900px){
@@ -518,4 +637,9 @@ a:hover{color:var(--blue)}
     padding:.42rem .55rem;
   }
   .nvc-interaction:first-child{padding-left:0}
+  .nvc-note-form-foot{
+    align-items:stretch;
+    flex-direction:column;
+  }
+  .nvc-note-form button[type="submit"]{width:100%}
 }
