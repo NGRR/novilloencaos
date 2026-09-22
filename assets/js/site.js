@@ -146,21 +146,20 @@
   const isSupportPage = Boolean(document.querySelector('.support-page'));
   const isEssayPage = Boolean(document.querySelector('.essay-body'));
 
-  const GISCUS_CONFIG = {
-    repo: 'NGRR/novilloencaos',
-    repoId: 'R_kgDOUe7wZA',
-    category: 'Announcements',
-    categoryId: '__PENDING_GISCUS_CATEGORY_ID__'
-  };
-  const GISCUS_READY = !GISCUS_CONFIG.categoryId.startsWith('__PENDING_');
+  const COMMUNITY_CONFIG_PATH = 'assets/data/community-config.json';
   const teaCounts = new Map();
+  let communityConfig = null;
+  let communityClient = null;
+  let supabaseModulePromise = null;
 
   const normalizeRecord = value => (value || '').trim().toUpperCase();
   const recordFromArchiveItem = item => normalizeRecord(item?.querySelector('.archive-code')?.textContent?.match(/REC:\/\/[A-Z0-9-]+/i)?.[0]);
   const articleRecord = () => normalizeRecord(contentMeta()?.content_record || document.querySelector('.essay-kicker')?.textContent?.match(/REC:\/\/[A-Z0-9-]+/i)?.[0]);
-  const discussionTerm = record => 'novilloencaos:' + record;
 
-  const teaCountUrl = () => new URL(homeHref + 'assets/data/tea-counts.json', location.href);
+  const projectAssetUrl = path => new URL(homeHref + path, location.href);
+  const teaCountUrl = () => projectAssetUrl('assets/data/tea-counts.json');
+  const communityConfigUrl = () => projectAssetUrl(COMMUNITY_CONFIG_PATH);
+
   const loadTeaCounts = async () => {
     try {
       const response = await fetch(teaCountUrl(), { cache: 'no-store' });
@@ -176,57 +175,242 @@
     }
   };
 
-  const discussionMetaCounts = discussion => {
-    const comments = Number(discussion?.totalCommentCount ?? discussion?.comments?.totalCount ?? 0);
-    const reactions = Number(discussion?.reactionCount ?? discussion?.reactions?.totalCount ?? 0);
-    return { comments, reactions };
+  const loadCommunityConfig = async () => {
+    if (communityConfig) return communityConfig;
+    try {
+      const response = await fetch(communityConfigUrl(), { cache: 'no-store' });
+      if (!response.ok) throw new Error('community_config_http_' + response.status);
+      const config = await response.json();
+      const url = String(config.supabaseUrl || '').trim().replace(/\/$/, '');
+      const key = String(config.supabaseAnonKey || config.supabasePublishableKey || '').trim();
+      communityConfig = {
+        supabaseUrl: url,
+        supabaseAnonKey: key,
+        ready: /^https:\/\/.+\.supabase\.co$/i.test(url) && key.length > 20
+      };
+    } catch {
+      communityConfig = { supabaseUrl: '', supabaseAnonKey: '', ready: false };
+    }
+    return communityConfig;
   };
 
-  const bindGiscusMetadata = shell => {
-    const handler = event => {
-      if (event.origin !== 'https://giscus.app') return;
-      if (!(event.data && typeof event.data === 'object' && event.data.giscus?.discussion)) return;
-      const iframe = shell.querySelector('iframe.giscus-frame');
-      if (!iframe || event.source !== iframe.contentWindow) return;
-      const counts = discussionMetaCounts(event.data.giscus.discussion);
-      const notes = shell.querySelector('[data-notes-count]');
-      const resonances = shell.querySelector('[data-resonance-count]');
-      if (notes) notes.textContent = String(counts.comments);
-      if (resonances) resonances.textContent = String(counts.reactions);
-    };
-    window.addEventListener('message', handler);
+  const loadSupabaseModule = async () => {
+    if (!supabaseModulePromise) {
+      supabaseModulePromise = import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    }
+    return supabaseModulePromise;
   };
 
-  const loadGiscus = shell => {
-    if (shell.dataset.giscusLoaded === '1') return;
-    shell.dataset.giscusLoaded = '1';
-    const mount = shell.querySelector('.nvc-giscus-mount');
-    if (!mount) return;
+  const getCommunityClient = async () => {
+    if (communityClient) return communityClient;
+    const config = await loadCommunityConfig();
+    if (!config.ready) throw new Error('community_not_configured');
+    const { createClient } = await loadSupabaseModule();
+    communityClient = createClient(config.supabaseUrl, config.supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false
+      }
+    });
+    return communityClient;
+  };
 
-    if (!GISCUS_READY) {
-      mount.innerHTML = '<p class="nvc-discussion-offline">NOTAS / temporalmente fuera de línea.</p>';
+  const ensureAnonymousSession = async () => {
+    const client = await getCommunityClient();
+    const { data: sessionData, error: sessionError } = await client.auth.getSession();
+    if (sessionError) throw sessionError;
+    if (sessionData?.session) return sessionData.session;
+
+    const { data, error } = await client.auth.signInAnonymously();
+    if (error) throw error;
+    if (!data?.session) throw new Error('anonymous_session_failed');
+    return data.session;
+  };
+
+  const interactionErrorText = error => {
+    const message = String(error?.message || error || '');
+    if (message.includes('community_not_configured')) return 'INTERACCIÓN / configuración pendiente.';
+    if (message.includes('rate_limit_short')) return 'Espera unos segundos antes de volver a publicar.';
+    if (message.includes('rate_limit_hour')) return 'Límite temporal alcanzado. Intenta nuevamente más tarde.';
+    if (message.includes('rate_limit_day')) return 'Límite diario alcanzado.';
+    if (message.includes('duplicate_note')) return 'Esta nota ya fue publicada.';
+    if (message.includes('blocked_user')) return 'Esta identidad no puede publicar notas.';
+    if (message.includes('invalid_note')) return 'La nota debe tener entre 3 y 1200 caracteres.';
+    if (message.includes('invalid_alias')) return 'El alias puede tener hasta 40 caracteres.';
+    return 'No fue posible completar la operación.';
+  };
+
+  const setShellStatus = (shell, message = '', state = '') => {
+    const node = shell?.querySelector('[data-community-status]');
+    if (!node) return;
+    node.textContent = message;
+    node.dataset.state = state;
+    node.hidden = !message;
+  };
+
+  const updateShellCounts = (record, values = {}) => {
+    document.querySelectorAll('.nvc-interactions').forEach(shell => {
+      if (normalizeRecord(shell.dataset.record) !== normalizeRecord(record)) return;
+      if (values.resonance_count !== undefined) {
+        const count = shell.querySelector('[data-resonance-count]');
+        if (count) count.textContent = String(values.resonance_count);
+      }
+      if (values.note_count !== undefined) {
+        const count = shell.querySelector('[data-notes-count]');
+        if (count) count.textContent = String(values.note_count);
+      }
+      if (values.viewer_resonated !== undefined) {
+        const button = shell.querySelector('[data-toggle-resonance]');
+        if (button) {
+          button.setAttribute('aria-pressed', String(Boolean(values.viewer_resonated)));
+          button.classList.toggle('is-active', Boolean(values.viewer_resonated));
+          const symbol = button.querySelector('.nvc-interaction-symbol');
+          if (symbol) symbol.textContent = values.viewer_resonated ? '♥' : '♡';
+        }
+      }
+    });
+  };
+
+  const fetchInteractionCounts = async records => {
+    const unique = [...new Set(records.map(normalizeRecord).filter(Boolean))];
+    if (!unique.length) return;
+    try {
+      const client = await getCommunityClient();
+      const { data, error } = await client.rpc('nvc_get_interaction_counts', { p_records: unique });
+      if (error) throw error;
+      (data || []).forEach(row => updateShellCounts(row.record, row));
+    } catch (error) {
+      if (String(error?.message || error).includes('community_not_configured')) {
+        document.querySelectorAll('.nvc-interactions').forEach(shell => shell.classList.add('is-pending'));
+      }
+    }
+  };
+
+  const formatNoteDate = value => {
+    try {
+      return new Intl.DateTimeFormat('es-CL', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      }).format(new Date(value));
+    } catch {
+      return '';
+    }
+  };
+
+  const renderNotes = (shell, notes = []) => {
+    const list = shell.querySelector('[data-notes-list]');
+    if (!list) return;
+    list.replaceChildren();
+
+    if (!notes.length) {
+      const empty = document.createElement('p');
+      empty.className = 'nvc-notes-empty';
+      empty.textContent = 'Todavía no hay notas en este registro.';
+      list.appendChild(empty);
       return;
     }
 
-    const script = document.createElement('script');
-    script.src = 'https://giscus.app/client.js';
-    script.async = true;
-    script.crossOrigin = 'anonymous';
-    script.dataset.repo = GISCUS_CONFIG.repo;
-    script.dataset.repoId = GISCUS_CONFIG.repoId;
-    script.dataset.category = GISCUS_CONFIG.category;
-    script.dataset.categoryId = GISCUS_CONFIG.categoryId;
-    script.dataset.mapping = 'specific';
-    script.dataset.term = discussionTerm(shell.dataset.record);
-    script.dataset.strict = '1';
-    script.dataset.reactionsEnabled = '1';
-    script.dataset.emitMetadata = '1';
-    script.dataset.inputPosition = 'top';
-    script.dataset.theme = 'light';
-    script.dataset.lang = 'es';
-    script.dataset.loading = 'lazy';
-    mount.appendChild(script);
-    bindGiscusMetadata(shell);
+    notes.forEach(note => {
+      const article = document.createElement('article');
+      article.className = 'nvc-note';
+
+      const meta = document.createElement('div');
+      meta.className = 'nvc-note-meta';
+
+      const alias = document.createElement('span');
+      alias.textContent = (note.alias || '').trim() || 'anónimo';
+
+      const date = document.createElement('time');
+      date.dateTime = note.created_at || '';
+      date.textContent = formatNoteDate(note.created_at);
+
+      const body = document.createElement('p');
+      body.textContent = note.body || '';
+
+      meta.append(alias, date);
+      article.append(meta, body);
+      list.appendChild(article);
+    });
+  };
+
+  const loadNotes = async shell => {
+    const record = normalizeRecord(shell.dataset.record);
+    setShellStatus(shell, 'cargando notas…', 'loading');
+    try {
+      const client = await getCommunityClient();
+      const { data, error } = await client.rpc('nvc_list_notes', { p_record: record });
+      if (error) throw error;
+      renderNotes(shell, data || []);
+      setShellStatus(shell, '');
+    } catch (error) {
+      renderNotes(shell, []);
+      setShellStatus(shell, interactionErrorText(error), 'error');
+    }
+  };
+
+  const toggleResonance = async shell => {
+    const record = normalizeRecord(shell.dataset.record);
+    const button = shell.querySelector('[data-toggle-resonance]');
+    if (button?.disabled) return;
+
+    if (button) button.disabled = true;
+    setShellStatus(shell, 'registrando resonancia…', 'loading');
+
+    try {
+      await ensureAnonymousSession();
+      const client = await getCommunityClient();
+      const { data, error } = await client.rpc('nvc_toggle_resonance', { p_record: record });
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      if (row) updateShellCounts(record, row);
+      setShellStatus(shell, '');
+      sendEvent('article_resonance', {
+        content_record: record,
+        resonance_state: row?.viewer_resonated ? 'on' : 'off',
+        content_path: location.pathname
+      });
+    } catch (error) {
+      setShellStatus(shell, interactionErrorText(error), 'error');
+    } finally {
+      if (button) button.disabled = false;
+    }
+  };
+
+  const submitNote = async (shell, form) => {
+    const record = normalizeRecord(shell.dataset.record);
+    const alias = form.elements.alias?.value?.trim() || '';
+    const body = form.elements.body?.value?.trim() || '';
+    const website = form.elements.website?.value || '';
+    const submit = form.querySelector('[type="submit"]');
+
+    if (submit?.disabled) return;
+    if (submit) submit.disabled = true;
+    setShellStatus(shell, 'publicando nota…', 'loading');
+
+    try {
+      await ensureAnonymousSession();
+      const client = await getCommunityClient();
+      const { data, error } = await client.rpc('nvc_add_note', {
+        p_record: record,
+        p_alias: alias,
+        p_body: body,
+        p_website: website
+      });
+      if (error) throw error;
+      form.reset();
+      const row = Array.isArray(data) ? data[0] : data;
+      if (row?.note_count !== undefined) updateShellCounts(record, { note_count: row.note_count });
+      await loadNotes(shell);
+      setShellStatus(shell, 'nota publicada', 'success');
+      window.setTimeout(() => setShellStatus(shell, ''), 2400);
+      sendEvent('article_note_submit', { content_record: record, content_path: location.pathname });
+    } catch (error) {
+      setShellStatus(shell, interactionErrorText(error), 'error');
+    } finally {
+      if (submit) submit.disabled = false;
+    }
   };
 
   const createInteractionShell = (record, articleHref, variant = 'archive') => {
@@ -236,39 +420,48 @@
     shell.dataset.record = record;
     shell.innerHTML = [
       '<div class="nvc-interaction-bar">',
-      '<button type="button" class="nvc-interaction" data-open-discussion="resonance" aria-expanded="false">',
+      '<button type="button" class="nvc-interaction" data-toggle-resonance aria-pressed="false">',
       '<span class="nvc-interaction-symbol" aria-hidden="true">♡</span><span>resonancias</span><span class="nvc-interaction-count" data-resonance-count>—</span>',
       '</button>',
-      '<button type="button" class="nvc-interaction" data-open-discussion="notes" aria-expanded="false">',
+      '<button type="button" class="nvc-interaction" data-open-notes aria-expanded="false">',
       '<span class="nvc-interaction-symbol" aria-hidden="true">◌</span><span>notas</span><span class="nvc-interaction-count" data-notes-count>—</span>',
       '</button>',
       '<a class="nvc-interaction nvc-tea-count" href="' + homeHref + 'apoyar/?ref=' + encodeURIComponent(record) + '" data-analytics="tea" aria-label="Invita un tecito">',
       cupIcon() + '<span class="nvc-interaction-count" data-tea-count-for="' + record + '">0</span>',
       '</a>',
       '</div>',
-      '<div class="nvc-discussion" hidden>',
-      '<div class="nvc-discussion-head"><span>NOTAS / LECTORES</span><button type="button" data-close-discussion aria-label="Cerrar notas">cerrar ×</button></div>',
-      '<div class="nvc-giscus-mount"></div>',
+      '<div class="nvc-community-status" data-community-status hidden aria-live="polite"></div>',
+      '<div class="nvc-notes-panel" hidden>',
+      '<div class="nvc-discussion-head"><span>NOTAS / LECTORES</span><button type="button" data-close-notes aria-label="Cerrar notas">cerrar ×</button></div>',
+      '<div class="nvc-notes-list" data-notes-list></div>',
+      '<form class="nvc-note-form" data-note-form>',
+      '<label><span>alias / opcional</span><input name="alias" type="text" maxlength="40" autocomplete="nickname"></label>',
+      '<label><span>nota</span><textarea name="body" minlength="3" maxlength="1200" rows="5" required></textarea></label>',
+      '<label class="nvc-honeypot" aria-hidden="true">sitio<input name="website" type="text" tabindex="-1" autocomplete="off"></label>',
+      '<div class="nvc-note-form-foot"><span>sin cuenta · máximo 1200 caracteres</span><button type="submit">publicar nota</button></div>',
+      '</form>',
       '</div>'
     ].join('');
     if (articleHref) shell.dataset.articleHref = articleHref;
     return shell;
   };
 
-  const toggleDiscussion = shell => {
-    const panel = shell.querySelector('.nvc-discussion');
+  const toggleNotes = async shell => {
+    const panel = shell.querySelector('.nvc-notes-panel');
+    const button = shell.querySelector('[data-open-notes]');
     if (!panel) return;
     const open = panel.hidden;
     panel.hidden = !open;
-    shell.querySelectorAll('[data-open-discussion]').forEach(button => button.setAttribute('aria-expanded', String(open)));
+    if (button) button.setAttribute('aria-expanded', String(open));
+
     if (open) {
-      loadGiscus(shell);
       sendEvent('comment_open', { content_record: shell.dataset.record, content_path: location.pathname });
+      await loadNotes(shell);
       window.requestAnimationFrame(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
     }
   };
 
-  const initInteractions = () => {
+  const initInteractions = async () => {
     document.querySelectorAll('.archive-item').forEach(item => {
       if (item.querySelector('.nvc-interactions')) return;
       const record = recordFromArchiveItem(item);
@@ -284,25 +477,43 @@
     }
 
     document.addEventListener('click', event => {
-      const open = event.target.closest('[data-open-discussion]');
-      if (open) {
-        const shell = open.closest('.nvc-interactions');
-        if (shell) {
-          if (open.dataset.openDiscussion === 'resonance') sendEvent('article_reaction_open', { content_record: shell.dataset.record, content_path: location.pathname });
-          toggleDiscussion(shell);
-        }
+      const resonance = event.target.closest('[data-toggle-resonance]');
+      if (resonance) {
+        const shell = resonance.closest('.nvc-interactions');
+        if (shell) toggleResonance(shell);
         return;
       }
-      const close = event.target.closest('[data-close-discussion]');
+
+      const notes = event.target.closest('[data-open-notes]');
+      if (notes) {
+        const shell = notes.closest('.nvc-interactions');
+        if (shell) toggleNotes(shell);
+        return;
+      }
+
+      const close = event.target.closest('[data-close-notes]');
       if (close) {
         const shell = close.closest('.nvc-interactions');
-        const panel = shell?.querySelector('.nvc-discussion');
+        const panel = shell?.querySelector('.nvc-notes-panel');
         if (panel) panel.hidden = true;
-        shell?.querySelectorAll('[data-open-discussion]').forEach(button => button.setAttribute('aria-expanded', 'false'));
+        shell?.querySelector('[data-open-notes]')?.setAttribute('aria-expanded', 'false');
       }
     });
 
+    document.addEventListener('submit', event => {
+      const form = event.target.closest('[data-note-form]');
+      if (!form) return;
+      event.preventDefault();
+      const shell = form.closest('.nvc-interactions');
+      if (shell) submitNote(shell, form);
+    });
+
     loadTeaCounts();
+
+    const records = [...document.querySelectorAll('.nvc-interactions')]
+      .map(shell => normalizeRecord(shell.dataset.record))
+      .filter(Boolean);
+    fetchInteractionCounts(records);
   };
 
   const cupIcon = () => [
