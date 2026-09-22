@@ -1,24 +1,20 @@
 # Comunidad / Supabase
 
-La interacción pública de **novilloencaos** usa Supabase para evitar exigir una cuenta visible al lector.
+La interacción pública de **novilloencaos** usa Supabase sin exigir registro ni cuenta al lector.
 
 ## Modelo
 
-- `♡ resonancias`: una por identidad anónima y publicación; vuelve a pulsar para retirarla.
+- `♡ resonancias`: una por navegador y publicación; vuelve a pulsar para retirarla.
 - `◌ notas`: alias opcional + texto de 3–1200 caracteres.
 - `☕`: contador editorial independiente de aportes confirmados.
-- La identidad Supabase se crea sólo al reaccionar o publicar; leer y abrir notas no exige sesión.
+- El navegador genera un UUID aleatorio cuando participa por primera vez y lo conserva en `localStorage`.
+- Ese UUID sirve únicamente para evitar resonancias duplicadas, aplicar límites y permitir bloqueo.
 - No se almacenan correo, nombre real ni contraseña.
+- Supabase Auth no es necesario para esta función.
 
-## Activación
+## Configuración
 
-1. Crear un proyecto en Supabase.
-2. Habilitar **Anonymous Sign-Ins** en Auth.
-3. Abrir **SQL Editor** y ejecutar `supabase/community.sql`.
-4. En la configuración/API del proyecto copiar:
-   - Project URL;
-   - Publishable key o legacy anon key.
-5. Completar `assets/data/community-config.json`:
+El frontend necesita sólo:
 
 ```json
 {
@@ -27,7 +23,13 @@ La interacción pública de **novilloencaos** usa Supabase para evitar exigir un
 }
 ```
 
-La clave pública puede residir en el frontend. **No usar nunca `service_role` en el repositorio.**
+La clave pública puede residir en el frontend. **No usar nunca `service_role` ni una secret key en GitHub Pages.**
+
+El esquema de instalación inicial está en:
+
+```text
+supabase/community.sql
+```
 
 ## Moderación
 
@@ -37,11 +39,11 @@ Las notas quedan en `public.nvc_notes`.
 - ocultar: cambiar a `status = hidden`
 - retirar conservando registro: `status = deleted`
 
-Para bloquear una identidad reincidente, copiar su `user_id` desde `nvc_notes` e insertarlo en `public.nvc_blocked_users`.
+Para bloquear una identidad reincidente, copiar su `visitor_id` desde `nvc_notes` e insertarlo en `public.nvc_blocked_users`.
 
 Los límites iniciales están implementados en PostgreSQL:
 
-- una resonancia por identidad y registro;
+- una resonancia por navegador y registro;
 - 10 segundos mínimos entre notas;
 - máximo 3 notas por hora;
 - máximo 10 por 24 horas;
@@ -49,4 +51,4 @@ Los límites iniciales están implementados en PostgreSQL:
 - honeypot en el formulario;
 - lista de bloqueo.
 
-Estos controles son por identidad anónima, no por IP. Una protección resistente a reinicios de identidad requiere una capa adicional (por ejemplo Turnstile validado por una Edge Function).
+Estos controles son por UUID local, no por IP. Borrar los datos del navegador crea una identidad nueva. Una protección resistente a reinicios de identidad o ataques distribuidos requiere una segunda capa, preferentemente Turnstile validado desde una Edge Function.
