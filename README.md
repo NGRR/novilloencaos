@@ -141,3 +141,57 @@ repository: NGRR/novilloencaos
 branch: main
 source: /
 ```
+
+
+## Resonancias, notas y tecitos
+
+La interfaz común incorpora una franja editorial por publicación:
+
+```text
+♡ resonancias    ◌ notas    ☕ 0
+```
+
+- **resonancias** y **notas** se resuelven mediante giscus sobre GitHub Discussions;
+- cada publicación usa su código `REC://…` como identificador estable, por lo que la portada y el artículo comparten el mismo hilo;
+- giscus se carga sólo cuando se abre la interacción;
+- el contador `☕` no representa clics: se mantiene manualmente con aportes confirmados en `/assets/data/tea-counts.json`;
+- `/giscus.json` restringe la carga al origen `https://ngrr.github.io`.
+
+### Activación pendiente de giscus
+
+El código está preparado con:
+
+```text
+repo:       NGRR/novilloencaos
+repoId:     R_kgDOUe7wZA
+category:   Announcements
+mapping:    specific
+strict:     1
+reactions:  enabled
+metadata:   enabled
+```
+
+Falta completar el `categoryId` generado por GitHub al habilitar Discussions. Hasta entonces la franja se muestra, pero el panel de notas informa que está temporalmente fuera de línea.
+
+Secuencia de activación:
+
+1. GitHub → `NGRR/novilloencaos` → **Settings → General → Features → Discussions**.
+2. Instalar la aplicación **giscus** únicamente para este repositorio.
+3. En giscus.app seleccionar `NGRR/novilloencaos` y la categoría **Announcements**.
+4. Copiar el valor `data-category-id` generado.
+5. Reemplazar `__PENDING_GISCUS_CATEGORY_ID__` en `/assets/js/site.js` por ese identificador.
+
+### Moderación
+
+Usar la categoría **Announcements** limita la creación de hilos a mantenedores y giscus. Los lectores sólo participan en los hilos asociados a publicaciones.
+
+Criterio editorial recomendado:
+
+```text
+conservar  observaciones · desacuerdos · asociaciones · preguntas · correcciones
+ocultar    ruido · desvíos menores · duplicados accidentales
+eliminar   spam · publicidad · automatización · abuso · datos sensibles
+bloquear   reincidencia evidente
+```
+
+La moderación se realiza desde la discusión correspondiente en GitHub. Ante una oleada de abuso pueden activarse temporalmente los límites de interacción del repositorio.
