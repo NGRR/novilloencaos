@@ -231,6 +231,8 @@
   const interactionErrorText = error => {
     const message = String(error?.message || error || '');
     if (message.includes('community_not_configured')) return 'INTERACCIÓN / configuración pendiente.';
+    if (/anonymous.*disabled|anonymous.*not.*enabled|provider.*disabled/i.test(message)) return 'INTERACCIÓN / acceso anónimo no habilitado.';
+    if (/failed to fetch|networkerror|importing a module script failed|load failed/i.test(message)) return 'INTERACCIÓN / no fue posible conectar con el servicio.';
     if (message.includes('rate_limit_short')) return 'Espera unos segundos antes de volver a publicar.';
     if (message.includes('rate_limit_hour')) return 'Límite temporal alcanzado. Intenta nuevamente más tarde.';
     if (message.includes('rate_limit_day')) return 'Límite diario alcanzado.';
@@ -469,6 +471,18 @@
       const shell = createInteractionShell(record, href, 'archive');
       if (shell) item.appendChild(shell);
     });
+
+    if (essayBody && !essayBody.querySelector('.article-support')) {
+      const wrap = document.createElement('div');
+      wrap.className = 'article-support';
+
+      const prompt = document.createElement('span');
+      prompt.className = 'article-support-copy';
+      prompt.textContent = 'si esto movió algo de lugar';
+
+      wrap.append(prompt, makeSupportLink('article-support-button support-cta--article'));
+      essayBody.appendChild(wrap);
+    }
 
     if (essayBody && !essayBody.querySelector('.nvc-interactions')) {
       const record = articleRecord();
