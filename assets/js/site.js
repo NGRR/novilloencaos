@@ -147,10 +147,10 @@
   const isEssayPage = Boolean(document.querySelector('.essay-body'));
 
   const COMMUNITY_CONFIG_PATH = 'assets/data/community-config.json';
+  const VISITOR_KEY = 'nvc_community_visitor';
   const teaCounts = new Map();
   let communityConfig = null;
-  let communityClient = null;
-  let supabaseModulePromise = null;
+  let volatileVisitorId = '';
 
   const normalizeRecord = value => (value || '').trim().toUpperCase();
   const recordFromArchiveItem = item => normalizeRecord(item?.querySelector('.archive-code')?.textContent?.match(/REC:\/\/[A-Z0-9-]+/i)?.[0]);
@@ -182,57 +182,102 @@
       if (!response.ok) throw new Error('community_config_http_' + response.status);
       const config = await response.json();
       const url = String(config.supabaseUrl || '').trim().replace(/\/$/, '');
-      const key = String(config.supabaseAnonKey || config.supabasePublishableKey || '').trim();
+      const key = String(config.supabasePublishableKey || config.supabaseAnonKey || '').trim();
       communityConfig = {
         supabaseUrl: url,
-        supabaseAnonKey: key,
+        apiKey: key,
         ready: /^https:\/\/.+\.supabase\.co$/i.test(url) && key.length > 20
       };
     } catch {
-      communityConfig = { supabaseUrl: '', supabaseAnonKey: '', ready: false };
+      communityConfig = { supabaseUrl: '', apiKey: '', ready: false };
     }
     return communityConfig;
   };
 
-  const loadSupabaseModule = async () => {
-    if (!supabaseModulePromise) {
-      supabaseModulePromise = import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-    }
-    return supabaseModulePromise;
-  };
-
-  const getCommunityClient = async () => {
-    if (communityClient) return communityClient;
+  const communityRpc = async (name, payload = {}) => {
     const config = await loadCommunityConfig();
     if (!config.ready) throw new Error('community_not_configured');
-    const { createClient } = await loadSupabaseModule();
-    communityClient = createClient(config.supabaseUrl, config.supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: false
-      }
+
+    const response = await fetch(config.supabaseUrl + '/rest/v1/rpc/' + encodeURIComponent(name), {
+      method: 'POST',
+      headers: {
+        apikey: config.apiKey,
+        Authorization: 'Bearer ' + config.apiKey,
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      },
+      body: JSON.stringify(payload)
     });
-    return communityClient;
+
+    const raw = await response.text();
+    let data = null;
+    if (raw) {
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        data = raw;
+      }
+    }
+
+    if (!response.ok) {
+      const detail = typeof data === 'object' && data
+        ? [data.message, data.details, data.hint, data.code].filter(Boolean).join(' / ')
+        : String(data || ('HTTP ' + response.status));
+      throw new Error(detail || ('HTTP ' + response.status));
+    }
+
+    return data;
   };
 
-  const ensureAnonymousSession = async () => {
-    const client = await getCommunityClient();
-    const { data: sessionData, error: sessionError } = await client.auth.getSession();
-    if (sessionError) throw sessionError;
-    if (sessionData?.session) return sessionData.session;
+  const validVisitorId = value => /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value || '');
 
-    const { data, error } = await client.auth.signInAnonymously();
-    if (error) throw error;
-    if (!data?.session) throw new Error('anonymous_session_failed');
-    return data.session;
+  const readVisitorId = () => {
+    if (validVisitorId(volatileVisitorId)) return volatileVisitorId;
+    try {
+      const stored = localStorage.getItem(VISITOR_KEY) || '';
+      if (validVisitorId(stored)) {
+        volatileVisitorId = stored;
+        return stored;
+      }
+    } catch {
+      // Puede operar durante esta carga aunque el almacenamiento esté bloqueado.
+    }
+    return '';
+  };
+
+  const createVisitorId = () => {
+    if (crypto?.randomUUID) return crypto.randomUUID();
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = [...bytes].map(byte => byte.toString(16).padStart(2, '0')).join('');
+    return [
+      hex.slice(0, 8),
+      hex.slice(8, 12),
+      hex.slice(12, 16),
+      hex.slice(16, 20),
+      hex.slice(20)
+    ].join('-');
+  };
+
+  const ensureVisitorId = () => {
+    const existing = readVisitorId();
+    if (existing) return existing;
+
+    volatileVisitorId = createVisitorId();
+    try {
+      localStorage.setItem(VISITOR_KEY, volatileVisitorId);
+    } catch {
+      // Identidad efímera para navegadores que bloquean almacenamiento local.
+    }
+    return volatileVisitorId;
   };
 
   const interactionErrorText = error => {
     const message = String(error?.message || error || '');
     if (message.includes('community_not_configured')) return 'INTERACCIÓN / configuración pendiente.';
-    if (/anonymous.*disabled|anonymous.*not.*enabled|provider.*disabled/i.test(message)) return 'INTERACCIÓN / acceso anónimo no habilitado.';
-    if (/failed to fetch|networkerror|importing a module script failed|load failed/i.test(message)) return 'INTERACCIÓN / no fue posible conectar con el servicio.';
+    if (/failed to fetch|networkerror|load failed|fetch/i.test(message)) return 'INTERACCIÓN / no fue posible conectar con el servicio.';
     if (message.includes('rate_limit_short')) return 'Espera unos segundos antes de volver a publicar.';
     if (message.includes('rate_limit_hour')) return 'Límite temporal alcanzado. Intenta nuevamente más tarde.';
     if (message.includes('rate_limit_day')) return 'Límite diario alcanzado.';
@@ -240,7 +285,8 @@
     if (message.includes('blocked_user')) return 'Esta identidad no puede publicar notas.';
     if (message.includes('invalid_note')) return 'La nota debe tener entre 3 y 1200 caracteres.';
     if (message.includes('invalid_alias')) return 'El alias puede tener hasta 40 caracteres.';
-    return 'No fue posible completar la operación.';
+    if (message.includes('invalid_visitor')) return 'INTERACCIÓN / identidad local no disponible.';
+    return 'No fue posible completar la interacción.';
   };
 
   const setShellStatus = (shell, message = '', state = '') => {
@@ -278,14 +324,14 @@
     const unique = [...new Set(records.map(normalizeRecord).filter(Boolean))];
     if (!unique.length) return;
     try {
-      const client = await getCommunityClient();
-      const { data, error } = await client.rpc('nvc_get_interaction_counts', { p_records: unique });
-      if (error) throw error;
+      const data = await communityRpc('nvc_get_interaction_counts', {
+        p_records: unique,
+        p_visitor_id: readVisitorId() || null
+      });
       (data || []).forEach(row => updateShellCounts(row.record, row));
     } catch (error) {
-      if (String(error?.message || error).includes('community_not_configured')) {
-        document.querySelectorAll('.nvc-interactions').forEach(shell => shell.classList.add('is-pending'));
-      }
+      console.warn('[novilloencaos/community/counts]', error);
+      document.querySelectorAll('.nvc-interactions').forEach(shell => shell.classList.add('is-pending'));
     }
   };
 
@@ -341,12 +387,11 @@
     const record = normalizeRecord(shell.dataset.record);
     setShellStatus(shell, 'cargando notas…', 'loading');
     try {
-      const client = await getCommunityClient();
-      const { data, error } = await client.rpc('nvc_list_notes', { p_record: record });
-      if (error) throw error;
+      const data = await communityRpc('nvc_list_notes', { p_record: record });
       renderNotes(shell, data || []);
       setShellStatus(shell, '');
     } catch (error) {
+      console.warn('[novilloencaos/community/notes]', error);
       renderNotes(shell, []);
       setShellStatus(shell, interactionErrorText(error), 'error');
     }
@@ -361,10 +406,10 @@
     setShellStatus(shell, 'registrando resonancia…', 'loading');
 
     try {
-      await ensureAnonymousSession();
-      const client = await getCommunityClient();
-      const { data, error } = await client.rpc('nvc_toggle_resonance', { p_record: record });
-      if (error) throw error;
+      const data = await communityRpc('nvc_toggle_resonance', {
+        p_record: record,
+        p_visitor_id: ensureVisitorId()
+      });
       const row = Array.isArray(data) ? data[0] : data;
       if (row) updateShellCounts(record, row);
       setShellStatus(shell, '');
@@ -374,6 +419,7 @@
         content_path: location.pathname
       });
     } catch (error) {
+      console.warn('[novilloencaos/community/resonance]', error);
       setShellStatus(shell, interactionErrorText(error), 'error');
     } finally {
       if (button) button.disabled = false;
@@ -392,15 +438,13 @@
     setShellStatus(shell, 'publicando nota…', 'loading');
 
     try {
-      await ensureAnonymousSession();
-      const client = await getCommunityClient();
-      const { data, error } = await client.rpc('nvc_add_note', {
+      const data = await communityRpc('nvc_add_note', {
         p_record: record,
         p_alias: alias,
         p_body: body,
-        p_website: website
+        p_website: website,
+        p_visitor_id: ensureVisitorId()
       });
-      if (error) throw error;
       form.reset();
       const row = Array.isArray(data) ? data[0] : data;
       if (row?.note_count !== undefined) updateShellCounts(record, { note_count: row.note_count });
@@ -409,6 +453,7 @@
       window.setTimeout(() => setShellStatus(shell, ''), 2400);
       sendEvent('article_note_submit', { content_record: record, content_path: location.pathname });
     } catch (error) {
+      console.warn('[novilloencaos/community/submit-note]', error);
       setShellStatus(shell, interactionErrorText(error), 'error');
     } finally {
       if (submit) submit.disabled = false;
