@@ -153,7 +153,13 @@
   let volatileVisitorId = '';
 
   const normalizeRecord = value => (value || '').trim().toUpperCase();
-  const recordFromArchiveItem = item => normalizeRecord(item?.querySelector('.archive-code')?.textContent?.match(/REC:\/\/[A-Z0-9-]+/i)?.[0]);
+  const recordFromArchiveItem = item => {
+    const explicit = normalizeRecord(item?.dataset?.record);
+    if (explicit) return explicit;
+    const code = item?.querySelector('.archive-code');
+    const firstLine = code?.innerHTML?.split(/<br\s*\/?>/i)?.[0] || code?.textContent || '';
+    return normalizeRecord(firstLine.match(/REC:\/\/[A-Z0-9-]+/i)?.[0]);
+  };
   const articleRecord = () => normalizeRecord(contentMeta()?.content_record || document.querySelector('.essay-kicker')?.textContent?.match(/REC:\/\/[A-Z0-9-]+/i)?.[0]);
 
   const projectAssetUrl = path => new URL(homeHref + path, location.href);
@@ -569,10 +575,24 @@
 
     loadTeaCounts();
 
-    const records = [...document.querySelectorAll('.nvc-interactions')]
-      .map(shell => normalizeRecord(shell.dataset.record))
-      .filter(Boolean);
-    fetchInteractionCounts(records);
+    const refreshInteractionCounts = () => {
+      const records = [...document.querySelectorAll('.nvc-interactions')]
+        .map(shell => normalizeRecord(shell.dataset.record))
+        .filter(Boolean);
+      fetchInteractionCounts(records);
+    };
+
+    refreshInteractionCounts();
+
+    window.addEventListener('pageshow', event => {
+      if (event.persisted) refreshInteractionCounts();
+    });
+
+    window.addEventListener('focus', refreshInteractionCounts);
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') refreshInteractionCounts();
+    });
   };
 
   const cupIcon = () => [
