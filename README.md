@@ -152,30 +152,12 @@ La interfaz común incorpora una franja editorial por publicación:
 ```
 
 - **resonancias** y **notas** se resuelven mediante Supabase;
-- el lector puede participar sin crear una cuenta visible;
-- Supabase crea una identidad anónima sólo cuando alguien reacciona o publica;
+- el lector participa sin cuenta, correo ni autenticación visible;
+- el navegador crea un UUID local únicamente al interactuar;
 - cada publicación usa su código estable `REC://…`;
 - el contador `☕` no representa clics: se mantiene manualmente con aportes confirmados en `/assets/data/tea-counts.json`.
 
-### Activación de Supabase
-
-La implementación está incluida en:
-
-```text
-/assets/data/community-config.json
-/supabase/community.sql
-/supabase/README.md
-```
-
-Secuencia:
-
-1. crear un proyecto Supabase;
-2. habilitar **Anonymous Sign-Ins**;
-3. ejecutar `supabase/community.sql` en SQL Editor;
-4. copiar Project URL y Publishable/anon key;
-5. completar `assets/data/community-config.json`.
-
-Nunca debe incorporarse una clave `service_role` al sitio público.
+El CTA editorial **“si esto movió algo de lugar / invita un tecito”** se conserva al final de cada artículo, separado de la franja de interacción.
 
 ### Moderación
 
@@ -187,11 +169,11 @@ hidden     moderada / conservada
 deleted    retirada / conservada como registro
 ```
 
-Una identidad reincidente puede bloquearse incorporando su `user_id` a `public.nvc_blocked_users`.
+Una identidad reincidente puede bloquearse incorporando su `visitor_id` a `public.nvc_blocked_users`.
 
 El sistema incluye inicialmente:
 
-- una resonancia por identidad y publicación;
+- una resonancia por identidad local y publicación;
 - 10 segundos mínimos entre notas;
 - máximo 3 notas por hora;
 - máximo 10 por 24 horas;
@@ -199,4 +181,4 @@ El sistema incluye inicialmente:
 - honeypot;
 - lista de bloqueo.
 
-Estos límites operan por identidad anónima. Para protección resistente a reinicios de identidad o ataques distribuidos debe añadirse posteriormente Turnstile validado desde una Edge Function.
+No depende de Supabase Auth. Para protección contra reinicios de identidad o ataques distribuidos debe añadirse posteriormente Turnstile validado desde una Edge Function.
