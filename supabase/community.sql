@@ -286,9 +286,9 @@ revoke all on function public.nvc_list_notes(text) from public;
 revoke all on function public.nvc_toggle_resonance(text, uuid) from public;
 revoke all on function public.nvc_add_note(text, text, text, text, uuid) from public;
 
-grant execute on function public.nvc_get_interaction_counts(text[], uuid) to anon, authenticated;
-grant execute on function public.nvc_list_notes(text) to anon, authenticated;
-grant execute on function public.nvc_toggle_resonance(text, uuid) to anon, authenticated;
-grant execute on function public.nvc_add_note(text, text, text, text, uuid) to anon, authenticated;
+grant execute on function public.nvc_get_interaction_counts(text[], uuid) to anon;
+grant execute on function public.nvc_list_notes(text) to anon;
+grant execute on function public.nvc_toggle_resonance(text, uuid) to anon;
+grant execute on function public.nvc_add_note(text, text, text, text, uuid) to anon;
 
 commit;
