@@ -387,3 +387,135 @@ a:hover{color:var(--blue)}
 }
 
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+
+
+/* Resonancias / notas / tecitos */
+.nvc-interactions{
+  min-width:0;
+  margin-top:.2rem;
+  font-family:var(--mono);
+}
+.archive-item>.nvc-interactions{
+  grid-column:2 / 4;
+  margin-top:-.9rem;
+}
+.nvc-interactions--article{
+  margin:1rem 0 2rem;
+  padding-top:1.5rem;
+  border-top:1px solid var(--line);
+}
+.nvc-interaction-bar{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:0;
+  min-height:35px;
+}
+.nvc-interaction{
+  appearance:none;
+  display:inline-flex;
+  align-items:center;
+  gap:.38rem;
+  min-height:32px;
+  margin:0;
+  padding:.4rem .68rem;
+  border:0;
+  border-left:1px solid var(--line);
+  background:transparent;
+  color:#4b5057;
+  font:500 .61rem/1 var(--mono);
+  letter-spacing:.035em;
+  text-transform:lowercase;
+  cursor:pointer;
+  text-decoration:none;
+}
+.nvc-interaction:first-child{
+  border-left:0;
+  padding-left:0;
+}
+.nvc-interaction:hover,
+.nvc-interaction:focus-visible{
+  color:var(--ink);
+  outline:none;
+}
+.nvc-interaction[aria-expanded="true"]{
+  color:var(--blue);
+}
+.nvc-interaction-symbol{
+  font-size:.86rem;
+  line-height:1;
+}
+.nvc-interaction-count{
+  min-width:1ch;
+  color:var(--muted);
+  font-weight:400;
+  font-variant-numeric:tabular-nums;
+}
+.nvc-tea-count svg{
+  width:14px;
+  height:14px;
+  flex:0 0 14px;
+}
+.nvc-discussion{
+  margin-top:1rem;
+  padding:1rem 0 0;
+  border-top:1px solid var(--line);
+}
+.nvc-discussion[hidden]{display:none}
+.nvc-discussion-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:1rem;
+  margin-bottom:1rem;
+  color:var(--muted);
+  font:500 .58rem/1 var(--mono);
+  letter-spacing:.09em;
+}
+.nvc-discussion-head button{
+  appearance:none;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  padding:0;
+  font:400 .58rem/1 var(--mono);
+  cursor:pointer;
+}
+.nvc-discussion-head button:hover,
+.nvc-discussion-head button:focus-visible{
+  color:var(--ink);
+  outline:none;
+}
+.nvc-giscus-mount,
+.nvc-giscus-mount .giscus,
+.nvc-giscus-mount .giscus-frame{
+  width:100%;
+}
+.nvc-discussion-offline{
+  margin:.75rem 0 0;
+  padding:.9rem 0;
+  border-top:1px dashed var(--line-strong);
+  color:var(--muted);
+  font:400 .62rem/1.5 var(--mono);
+  letter-spacing:.05em;
+}
+
+@media(max-width:900px){
+  .archive-item>.nvc-interactions{grid-column:2}
+}
+
+@media(max-width:640px){
+  .archive-item>.nvc-interactions{
+    grid-column:auto;
+    margin-top:.25rem;
+  }
+  .nvc-interaction-bar{
+    border-top:1px solid var(--line);
+    padding-top:.45rem;
+  }
+  .nvc-interaction{
+    flex:0 0 auto;
+    padding:.42rem .55rem;
+  }
+  .nvc-interaction:first-child{padding-left:0}
+}
