@@ -151,47 +151,52 @@ La interfaz común incorpora una franja editorial por publicación:
 ♡ resonancias    ◌ notas    ☕ 0
 ```
 
-- **resonancias** y **notas** se resuelven mediante giscus sobre GitHub Discussions;
-- cada publicación usa su código `REC://…` como identificador estable, por lo que la portada y el artículo comparten el mismo hilo;
-- giscus se carga sólo cuando se abre la interacción;
-- el contador `☕` no representa clics: se mantiene manualmente con aportes confirmados en `/assets/data/tea-counts.json`;
-- `/giscus.json` restringe la carga al origen `https://ngrr.github.io`.
+- **resonancias** y **notas** se resuelven mediante Supabase;
+- el lector puede participar sin crear una cuenta visible;
+- Supabase crea una identidad anónima sólo cuando alguien reacciona o publica;
+- cada publicación usa su código estable `REC://…`;
+- el contador `☕` no representa clics: se mantiene manualmente con aportes confirmados en `/assets/data/tea-counts.json`.
 
-### Activación pendiente de giscus
+### Activación de Supabase
 
-El código está preparado con:
+La implementación está incluida en:
 
 ```text
-repo:       NGRR/novilloencaos
-repoId:     R_kgDOUe7wZA
-category:   Announcements
-mapping:    specific
-strict:     1
-reactions:  enabled
-metadata:   enabled
+/assets/data/community-config.json
+/supabase/community.sql
+/supabase/README.md
 ```
 
-Falta completar el `categoryId` generado por GitHub al habilitar Discussions. Hasta entonces la franja se muestra, pero el panel de notas informa que está temporalmente fuera de línea.
+Secuencia:
 
-Secuencia de activación:
+1. crear un proyecto Supabase;
+2. habilitar **Anonymous Sign-Ins**;
+3. ejecutar `supabase/community.sql` en SQL Editor;
+4. copiar Project URL y Publishable/anon key;
+5. completar `assets/data/community-config.json`.
 
-1. GitHub → `NGRR/novilloencaos` → **Settings → General → Features → Discussions**.
-2. Instalar la aplicación **giscus** únicamente para este repositorio.
-3. En giscus.app seleccionar `NGRR/novilloencaos` y la categoría **Announcements**.
-4. Copiar el valor `data-category-id` generado.
-5. Reemplazar `__PENDING_GISCUS_CATEGORY_ID__` en `/assets/js/site.js` por ese identificador.
+Nunca debe incorporarse una clave `service_role` al sitio público.
 
 ### Moderación
 
-Usar la categoría **Announcements** limita la creación de hilos a mantenedores y giscus. Los lectores sólo participan en los hilos asociados a publicaciones.
-
-Criterio editorial recomendado:
+Las notas se almacenan en `public.nvc_notes`:
 
 ```text
-conservar  observaciones · desacuerdos · asociaciones · preguntas · correcciones
-ocultar    ruido · desvíos menores · duplicados accidentales
-eliminar   spam · publicidad · automatización · abuso · datos sensibles
-bloquear   reincidencia evidente
+published  visible
+hidden     moderada / conservada
+deleted    retirada / conservada como registro
 ```
 
-La moderación se realiza desde la discusión correspondiente en GitHub. Ante una oleada de abuso pueden activarse temporalmente los límites de interacción del repositorio.
+Una identidad reincidente puede bloquearse incorporando su `user_id` a `public.nvc_blocked_users`.
+
+El sistema incluye inicialmente:
+
+- una resonancia por identidad y publicación;
+- 10 segundos mínimos entre notas;
+- máximo 3 notas por hora;
+- máximo 10 por 24 horas;
+- rechazo de duplicados durante 7 días;
+- honeypot;
+- lista de bloqueo.
+
+Estos límites operan por identidad anónima. Para protección resistente a reinicios de identidad o ataques distribuidos debe añadirse posteriormente Turnstile validado desde una Edge Function.
