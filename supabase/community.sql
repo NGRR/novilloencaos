@@ -69,7 +69,7 @@ begin
   return query
   with requested as (
     select distinct upper(trim(value)) as rec
-    from unnest(coalesce(p_records, array[]::text[])) as value
+    from unnest(coalesce(p_records, array[]::text[])) as u(value)
     where upper(trim(value)) ~ '^REC://[A-Z0-9-]+$'
   )
   select
