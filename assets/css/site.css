@@ -231,6 +231,25 @@ a:hover{color:var(--blue)}
 .archive-code{font:400 .68rem/1.5 var(--mono);color:var(--muted)}
 .archive-title h2{margin:0;font:400 clamp(1.8rem,3.3vw,3rem)/1.05 var(--sans);letter-spacing:-.035em}
 .archive-title p{max-width:42rem;margin:.8rem 0 0;color:#3d4248;font-family:var(--serif);font-size:1.04rem}
+.archive-title{display:flex;flex-direction:column;min-width:0}
+.archive-title:after{
+  content:'leer  →';
+  align-self:flex-end;
+  margin-top:.9rem;
+  padding:.16rem 0 .2rem;
+  border-bottom:1px solid var(--line-strong);
+  color:var(--muted);
+  font:500 .58rem/1 var(--mono);
+  letter-spacing:.08em;
+  text-transform:lowercase;
+  transition:color .16s ease,border-color .16s ease,transform .16s ease;
+}
+.archive-title:hover:after,
+.archive-title:focus-visible:after{
+  color:var(--ink);
+  border-color:var(--ink);
+  transform:translateX(2px);
+}
 .archive-tags{display:flex;flex-wrap:wrap;align-content:flex-start;gap:.4rem}
 .tag{border:1px solid var(--line-strong);padding:.25rem .42rem;font:400 .61rem/1 var(--mono);text-transform:uppercase;letter-spacing:.04em;background:rgba(255,255,255,.55)}
 
